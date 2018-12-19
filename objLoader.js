@@ -475,7 +475,7 @@ OBJDoc.prototype.Translate = function () {
                 // Copy Texture coordinates
                 let tIdx = face.tIndices[k];
                 if (tIdx >= 0) {
-                    let texcord = this.texcords[vIdx];
+                    let texcord = this.texcords[tIdx];
                     texcords[index_indices * 2 + 0] = texcord.elements[0];
                     texcords[index_indices * 2 + 1] = texcord.elements[1];
                 }

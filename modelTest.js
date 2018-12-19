@@ -259,7 +259,7 @@ function main() {
         console.log("无法获取WebGL的上下文");
         return;
     }
-
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
     // alert(gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
 
     var program=initShaders(gl, objv, objf);
@@ -313,7 +313,7 @@ function main() {
 
 
     //读取OBJ文件
-    model.readOBJFile("resources/cube.obj", gl, true);
+    model.readOBJFile("resources/moon.obj", gl, true);
 
 
     var currentAngle = 0.0; //当前模型的旋转角度
@@ -380,7 +380,6 @@ function onDocumentKeyDown(event) {
         code = event.keyCode;
     }
     PRESSINGKEY.set(code,true);
-    console.log(event,PRESSINGKEY)
 }
 function onDocumentKeyUp(){
     var code;
