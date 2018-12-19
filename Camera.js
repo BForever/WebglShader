@@ -1,18 +1,22 @@
 // Default camera values
 const YAW = -90.0;
 const PITCH = 0.0;
-const SPEED = 0.0025;
-const SENSITIVITY = 0.02;
+const SPEED = 0.025;
+const SENSITIVITY = 0.05;
 const ZOOM = 45.0;
 const DIRECTION = {
     FORWARD: "w",
     BACKWARD: "s",
     LEFT: "a",
     RIGHT: "d",
+    ARROWUP:"ArrowUp",
+    ARROWDOWN:"ArrowDown",
+    ARROWLEFT:"ArrowLeft",
+    ARROWRIGHT:"ArrowRight",
 };
 
 function Camera() {
-    this.Position = new Vector3([0,0,0]);
+    this.Position = new Vector3([0,0,10]);
     this.Front = new Vector3([0,0,-1]);
     this.Up = new Vector3([0,1,0]);
     this.Right = new Vector3([1,0,0]);
@@ -35,7 +39,7 @@ Camera.prototype.getViewMatrix = function () {
         this.Up.elements[0], this.Up.elements[1], this.Up.elements[2]);
 };
 
-Camera.prototype.ProcessKeyboard = function (direction, deltaTime) {
+Camera.prototype.ProcessPosition = function (direction, deltaTime) {
     let velocity = this.MovementSpeed * deltaTime;
     if (direction === DIRECTION.FORWARD)
         this.Position = this.Position.add(this.Front.scalarmultiply(velocity));
@@ -47,7 +51,7 @@ Camera.prototype.ProcessKeyboard = function (direction, deltaTime) {
         this.Position = this.Position.add(this.Right.scalarmultiply(velocity));
 };
 
-Camera.prototype.ProcessMouseMovement = function (xoffset, yoffset, constrainPitch = true) {
+Camera.prototype.ProcessRotation = function (xoffset, yoffset, constrainPitch = true) {
     xoffset *= this.MouseSensitivity;
     yoffset *= this.MouseSensitivity;
 

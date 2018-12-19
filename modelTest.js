@@ -123,7 +123,10 @@ void main()
     for(int i = 0; i < NR_SPOT_LIGHTS; i++)
         result += CalcSpotLight(spotLights[i], norm, FragPos, viewDir);
 
-    FragColor = vec4(result, 1.0);
+    // if(material.ambientNr>0)
+        FragColor = vec4(result, 1.0);
+    // else
+        // FragColor = vec4(1,0,0, 1.0);
 //    FragColor = vec4(texture(material.diffuse[0], TexCoords));
 }
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
@@ -245,6 +248,8 @@ var fragmentShaderSource = "" +
     "   gl_FragColor = v_Color;\n" +
     "}\n";
 
+
+
 function main() {
     var canvas = document.getElementById("canvas");
     var gl = canvas.getContext('webgl2');
@@ -283,48 +288,133 @@ function main() {
         return;
     }
 
-    //为顶点坐标、颜色和法向量准备空白缓冲区对象
-    var model = initVertexBuffer(gl, program);
+    var model = new Model(gl, program);
     if(!model){
         console.log("无法准备空白缓冲区");
         return;
     }
+
     var dirlight = new DirLight();
     dirlight.ambient = new Vector3([0.2,0.2,0.2]);
-    dirlight.direction = new Vector3([0,-1,0]);
+    dirlight.direction = new Vector3([0,0,-1]);
     dirlight.diffuse = new Vector3([1,1,1]);
-    console.log(dirlight)
-    dirlight.set(gl);
+    dirlight.specular = new Vector3([1,1,1]);
+
+    dirlight.use(gl);
 
     //计算视点投影矩阵
+    var camera = new Camera();
     var projectionMatrix = new Matrix4();
-    projectionMatrix.setPerspective(45.0,canvas.width/canvas.height, 1.0, 1000.0);
 
-    var viewMatrix = new Matrix4();
-    viewMatrix.setLookAt(0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    // canvas.addEventListener('mousedown',onDocumentMousewheel,false);
+    canvas.onmousewheel = function (event) {
+        camera.ProcessMouseScroll(event.deltaY/100)
+    };
+
 
     //读取OBJ文件
-    readOBJFile("resources/cube.obj", gl, model, 60, true);
+    model.readOBJFile("resources/cube.obj", gl, true);
+
 
     var currentAngle = 0.0; //当前模型的旋转角度
     var tick = function () {
+        updateElapsed();
+
+        ProcessInput(camera);
+
+        projectionMatrix.setPerspective(camera.Zoom,canvas.width/canvas.height, 1.0, 1000.0);
+        var viewMatrix = camera.getViewMatrix();
+
+        //设置模型旋转
+        var modelMatrix = new Matrix4();
+        modelMatrix.setRotate(currentAngle, 1.0, 0.0, 0.0);
+        modelMatrix.rotate(currentAngle, 0.0, 1.0, 0.0);
+        modelMatrix.rotate(currentAngle, 0.0, 0.0, 1.0);
+        modelMatrix.scale(1, 1, 1);
+
+        //计算模型视图投影矩阵
+        gl.uniformMatrix4fv(gl.program.uModel, false, modelMatrix.elements);
+        gl.uniformMatrix4fv(gl.program.uView, false, viewMatrix.elements);
+        gl.uniformMatrix4fv(gl.program.uProjection, false, projectionMatrix.elements);
+        gl.uniform3fv(gl.getUniformLocation(gl.program,"viewPos"),camera.Position.elements);
+
         currentAngle = animate(currentAngle); //更新角度
-        draw(gl, program, currentAngle, viewMatrix,projectionMatrix, model);
+        model.draw(gl);
         requestAnimationFrame(tick);
     };
 
 
     tick();
 }
+
+var last = +new Date();
+var elapsed = 0;
+function updateElapsed() {
+    var now = +new Date();
+    elapsed = now - last;
+    last = now;
+}
+
 //模型角度改变函数
 var angle_step = 30;
-var last = +new Date();
-
 function animate(angle) {
-    var now = +new Date();
-    var elapsed = now - last;
-    last = now;
     var newAngle = angle + (angle_step * elapsed) / 1000.0;
     return newAngle % 360;
 }
+
+//添加键盘监听事件
+document.addEventListener('keydown',onDocumentKeyDown,false);
+document.addEventListener('keyup',onDocumentKeyUp,false);
+// document.addEventListener('mousemove',onDocumentMousewheel,false);
+
+
+var PRESSINGKEY = new Map();
 main();
+
+
+function onDocumentKeyDown(event) {
+    var code;
+    if (event.key !== undefined) {
+        code = event.key;
+    } else if (event.keyCode !== undefined) {
+        code = event.keyCode;
+    }
+    PRESSINGKEY.set(code,true);
+    console.log(event,PRESSINGKEY)
+}
+function onDocumentKeyUp(){
+    var code;
+    if (event.key !== undefined) {
+        code = event.key;
+    } else if (event.keyCode !== undefined) {
+        code = event.keyCode;
+    }
+    PRESSINGKEY.delete(code);
+}
+
+function ProcessInput(camera) {
+    if(PRESSINGKEY.get(DIRECTION.FORWARD)!==undefined){
+        camera.ProcessPosition(DIRECTION.FORWARD,elapsed);
+    }
+    if(PRESSINGKEY.get(DIRECTION.BACKWARD)!==undefined){
+        camera.ProcessPosition(DIRECTION.BACKWARD,elapsed);
+    }
+    if(PRESSINGKEY.get(DIRECTION.LEFT)!==undefined){
+        camera.ProcessPosition(DIRECTION.LEFT,elapsed);
+    }
+    if(PRESSINGKEY.get(DIRECTION.RIGHT)!==undefined){
+        camera.ProcessPosition(DIRECTION.RIGHT,elapsed);
+    }
+    if(PRESSINGKEY.get(DIRECTION.ARROWUP)!==undefined){
+        camera.ProcessRotation(0,elapsed);
+    }
+    if(PRESSINGKEY.get(DIRECTION.ARROWDOWN)!==undefined){
+        camera.ProcessRotation(0,-elapsed);
+    }
+    if(PRESSINGKEY.get(DIRECTION.ARROWLEFT)!==undefined){
+        camera.ProcessRotation(-elapsed,0);
+    }
+    if(PRESSINGKEY.get(DIRECTION.ARROWRIGHT)!==undefined){
+        camera.ProcessRotation(elapsed,0);
+    }
+}

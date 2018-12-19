@@ -6,7 +6,7 @@ function DirLight() {
     this.direction = new Vector3([0,0,0]);
 }
 
-DirLight.prototype.set = function (gl) {
+DirLight.prototype.use = function (gl) {
     var location = gl.getUniformLocation(gl.program,"dirLight.ambient");
     gl.uniform3fv(location,this.ambient.elements);
     location = gl.getUniformLocation(gl.program,"dirLight.diffuse");

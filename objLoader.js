@@ -1,58 +1,24 @@
-//声明变换矩阵（模型矩阵）
-var g_modelMatrix = new Matrix4();
-// g_modelMatrix.scale(2,1,1);
-
 //绘制当前的模型
-function draw(gl, program, angle, viewMatrix, projectionMatrix, model) {
+Model.prototype.draw = function (gl) {
     //判断obj文件和mtl文件都已经解析完成
-    // console.log(model.objdoc)
-    if (model.objdoc !== null && model.objdoc.isMTLComplete()) {
-        model.drawingInfo = onReadComplete(gl, model);
-        model.objdoc = null;
+    if (this.loading === true && this.objDoc.isMTLComplete()) {
+        this.onReadComplete(gl, this);
+        this.loading = false;
+        this.loaded = true;
+
     }
 
-
-
-
-    //判断模型数据是否解析完成
-    if (!model.drawingInfo) return;
-
-    // model.objdoc.mtls[0].materials[0].apply(gl);
+    if (!this.loaded) return;
 
     gl.clear(gl.COLOR_BUFFER_BIT, gl.DEPTH_BUFFER_BIT);
-
-    //设置模型旋转
-
-    g_modelMatrix.setRotate(angle, 1.0, 0.0, 0.0);
-    g_modelMatrix.rotate(angle, 0.0, 1.0, 0.0);
-    g_modelMatrix.rotate(angle, 0.0, 0.0, 1.0);
-
-
-    //计算模型视图投影矩阵
-    gl.uniformMatrix4fv(program.uModel, false, g_modelMatrix.elements);
-    gl.uniformMatrix4fv(program.uView, false, viewMatrix.elements);
-    gl.uniformMatrix4fv(program.uProjection, false, projectionMatrix.elements);
-
-    // console.log("model ok")
-    //绘制
-    gl.drawElements(gl.TRIANGLES, model.drawingInfo.indices.length, gl.UNSIGNED_SHORT, 0);
-}
-
-//创建缓冲区对象并初始化配置
-function initVertexBuffer(gl, program) {
-    var obj = {};
-    obj.vertexBuffer = createEmptyArrayBuffer(gl, program.aPosition, 3, gl.FLOAT);
-    obj.normalBuffer = createEmptyArrayBuffer(gl, program.aNormal, 3, gl.FLOAT);
-    obj.texcordBuffer = createEmptyArrayBuffer(gl, program.aTexCoords, 2, gl.FLOAT);
-    obj.indexBuffer = gl.createBuffer();
-    if (!obj.vertexBuffer || !obj.normalBuffer || !obj.texcordBuffer || !obj.indexBuffer) {
-        return null;
+    for (let i = 0; i < this.objDoc.nodes.length; i++) {
+        let node = this.objDoc.nodes[i];
+        node.material.apply(gl);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,node.indexBuffer);
+        gl.drawElements(gl.TRIANGLES, node.indices.length, gl.UNSIGNED_INT, 0);
     }
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-    return obj;
-}
+};
 
 //创建一个缓冲区对象，将其分配给属性变量，并启用赋值
 function createEmptyArrayBuffer(gl, a_attribute, num, type) {
@@ -69,76 +35,82 @@ function createEmptyArrayBuffer(gl, a_attribute, num, type) {
     return buffer;
 }
 
-function readOBJFile(filename, gl, model, scale, reverse) {
-    model.objdoc = null;
+Model.prototype.readOBJFile = function (filename, gl, reverse) {
+    let pathstrs = filename.split("/");
+    this.directory = pathstrs.slice(0, pathstrs.length - 1).join("/");
     var request = new XMLHttpRequest();
     request.open("GET", filename, true);
     request.onreadystatechange = function () {
         if (request.readyState === 4 && request.status == 200) {
             //获取到数据调用方法处理
-            onReadOBJFile(request.responseText, filename, gl, model, scale, reverse);
+            this.onReadOBJFile(request.responseText, filename, gl, reverse);
         }
-    }
+    }.bind(this);
     request.send();
-}
+};
 
 //obj文件读取成功后开始解析
-function onReadOBJFile(fileString, fileName, gl, model, scale, reverse) {
+Model.prototype.onReadOBJFile = function (fileString, fileName, gl, reverse) {
     var objDoc = new OBJDoc(fileName); // 创建一个OBJDoc 对象
-    var result = objDoc.parse(fileString, scale, reverse); //解析文件
+    var result = objDoc.parse(gl, fileString, reverse); //解析文件
     if (!result) {
-        model.objdoc = null;
-        model.drawingInfo = null;
         console.log("obj文件解析错误");
-        return;
     } else {
-        //解析成功赋值给g_objDoc
-        model.objdoc = objDoc;
+        //解析成功
+        this.objDoc = objDoc;
+        this.loading = true;
         console.log("解析成功");
     }
-}
+};
 
 //obj文件已经成功读取解析后处理函数
-function onReadComplete(gl, model) {
+Model.prototype.onReadComplete = function (gl) {
     //从OBJ文件获取顶点坐标和颜色
-    var drawingInfo = model.objdoc.getDrawingInfo();
+    this.objDoc.Translate();
 
     //将数据写入缓冲区
 
     console.log("数据开始");
-    console.log("顶点坐标", drawingInfo.vertices);
-    console.log("法向量", drawingInfo.normals);
-    console.log("纹理坐标", drawingInfo.texcords);
-    console.log("索引值", drawingInfo.indices);
+    console.log("顶点坐标", this.objDoc.vertices);
+    console.log("法向量", this.objDoc.normals);
+    console.log("纹理坐标", this.objDoc.texcords);
     //顶点
-    gl.bindBuffer(gl.ARRAY_BUFFER, model.vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, drawingInfo.vertices, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.objDoc.vertices, gl.STATIC_DRAW);
 
     //法向量
-    gl.bindBuffer(gl.ARRAY_BUFFER, model.normalBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, drawingInfo.normals, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.objDoc.normals, gl.STATIC_DRAW);
 
     //纹理坐标
-    gl.bindBuffer(gl.ARRAY_BUFFER, model.texcordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, drawingInfo.texcords, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.texcordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.objDoc.texcords, gl.STATIC_DRAW);
+
 
     //索引值
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, model.indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, drawingInfo.indices, gl.STATIC_DRAW);
+    for (let i = 0; i < this.objDoc.nodes.length; i++) {
+        let node = this.objDoc.nodes[i];
+        node.indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,node.indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,node.indices,gl.STATIC_DRAW);
+    }
+    console.log(this.objDoc.nodes)
+};
 
+function Model(gl, program) {
+    this.loading = false;
+    this.loaded = false;
+    this.objDoc = null;
 
-    for (let i = 0;i<model.objdoc.mtls.length;i++) {
-        let mtl = model.objdoc.mtls[i];
-        console.log(mtl)
-        for(let j = 0;j< mtl.materials.length;j++){
-            let material = mtl.materials[j];
-            console.log(material)
-            material.apply(gl);
-        }
+    this.vertexBuffer = createEmptyArrayBuffer(gl, program.aPosition, 3, gl.FLOAT);
+    this.normalBuffer = createEmptyArrayBuffer(gl, program.aNormal, 3, gl.FLOAT);
+    this.texcordBuffer = createEmptyArrayBuffer(gl, program.aTexCoords, 2, gl.FLOAT);
+
+    if (!this.vertexBuffer || !this.normalBuffer || !this.texcordBuffer) {
+        console.log("无法创建缓冲区")
     }
 
-
-    return drawingInfo;
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
 }
 
 
@@ -148,22 +120,24 @@ function onReadComplete(gl, model) {
 
 // OBJDoc object
 // Constructor
-var OBJDoc = function (fileName) {
+function OBJDoc(fileName) {
     this.fileName = fileName;
+
     this.mtls = new Array(0);      // Initialize the property for MTL
-    this.objects = new Array(0);   // Initialize the property for Object
+    this.nodes = new Array(0);
     this.vertices = new Array(0);  // Initialize the property for Vertex
+    this.numVertices = 0;
     this.normals = new Array(0);   // Initialize the property for Normal
     this.texcords = new Array(0);   // Initialize the property for Texcord
 }
 
 // Parsing the OBJ file
-OBJDoc.prototype.parse = function (fileString, scale, reverse) {
+OBJDoc.prototype.parse = function (gl, fileString, reverse) {
     var lines = fileString.split('\n');  // Break up into lines and store them as array
     lines.push(null); // Append null
     var index = 0;    // Initialize index of line
 
-    var currentObject = null;
+    var currentNode = null;
     var currentMaterialName = "";
 
     // Parse line by line
@@ -179,13 +153,13 @@ OBJDoc.prototype.parse = function (fileString, scale, reverse) {
                 continue;  // Skip comments
             case 'mtllib':     // Read Material chunk
                 var path = this.parseMtllib(sp, this.fileName);
-                var mtl = new MTLDoc();   // Create MTL instance
+                var mtl = new MTLDoc(path);   // Create MTL instance
                 this.mtls.push(mtl);
                 var request = new XMLHttpRequest();
                 request.onreadystatechange = function () {
                     if (request.readyState == 4) {
                         if (request.status != 404) {
-                            onReadMTLFile(request.responseText, mtl);
+                            onReadMTLFile(gl, request.responseText, mtl);
                         } else {
                             mtl.complete = true;
                         }
@@ -194,15 +168,16 @@ OBJDoc.prototype.parse = function (fileString, scale, reverse) {
                 request.open('GET', path, true);  // Create a request to acquire the file
                 request.send();                   // Send the request
                 continue; // Go to the next line
-            case 'o':
-            case 'g':   // Read Object name
-                var object = this.parseObjectName(sp);
-                this.objects.push(object);
-                currentObject = object;
-                continue; // Go to the next line
+            // case 'o':
+            // case 'g':   // Read Object name
+            //     var object = this.parseObjectName(sp);
+            //     this.meshes.push(object);
+            //     currentObject = object;
+            //     continue; // Go to the next line
             case 'v':   // Read vertex
                 var vertex = this.parseVector3(sp);
                 this.vertices.push(vertex);
+                this.numVertices++;
                 continue; // Go to the next line
             case 'vn':   // Read normal
                 var normal = this.parseVector3(sp);
@@ -214,24 +189,43 @@ OBJDoc.prototype.parse = function (fileString, scale, reverse) {
                 continue; // Go to the next line
             case 'usemtl': // Read Material name
                 currentMaterialName = this.parseUsemtl(sp);
+                currentNode = new Node(currentMaterialName);
+                this.nodes.push(currentNode);
                 continue; // Go to the next line
             case 'f': // Read face
                 var face = this.parseFace(sp, currentMaterialName, this.vertices, reverse);
-                currentObject.addFace(face);
+                currentNode.addFace(face);
                 continue; // Go to the next line
         }
     }
-
     return true;
 }
 
-OBJDoc.prototype.parseMtllib = function (sp, fileName) {
-    // Get directory path
-    var i = fileName.lastIndexOf("/");
-    var dirPath = "";
-    if (i > 0) dirPath = fileName.substr(0, i + 1);
+function Node(materialName) {
+    this.materialName = materialName;
+    this.material = null;
+    this.faces = [];
+    this.numIndices = 0;
+    this.indices = new Array(0);
+    this.indexBuffer = null;
+}
 
-    return dirPath + sp.getWord();   // Get path
+Node.prototype.addFace = function (face) {
+    this.faces.push(face);
+    this.numIndices += face.numIndices;
+};
+
+function getDirectoryPath(filepath) {
+    // Get directory path
+    var i = filepath.lastIndexOf("/");
+    var dirPath = "";
+    if (i > 0) dirPath = filepath.substr(0, i + 1);
+
+    return dirPath;
+}
+
+OBJDoc.prototype.parseMtllib = function (sp) {
+    return getDirectoryPath(this.fileName) + sp.getWord();   // Get path
 }
 
 OBJDoc.prototype.parseObjectName = function (sp) {
@@ -244,7 +238,7 @@ OBJDoc.prototype.parseVector3 = function (sp) {
     var x = sp.getFloat();
     var y = sp.getFloat();
     var z = sp.getFloat();
-    var vec = [x,y,z];
+    var vec = [x, y, z];
     return new Vector3(vec);
 }
 
@@ -259,9 +253,22 @@ OBJDoc.prototype.parseFace = function (sp, materialName, vertices, reverse) {
         var word = sp.getWord();
         if (word == null) break;
         var subWords = word.split('/');
+        let valid = true;
+        for (let i = 0; i < subWords.length; i++) {
+            if (isNaN(subWords[i]) || subWords == 0) valid = false;
+        }
+        if (!valid) break;
+
+
         if (subWords.length >= 1) {
             var vi = parseInt(subWords[0]) - 1;
             face.vIndices.push(vi);
+        }
+        if (subWords.length >= 2) {
+            var ti = parseInt(subWords[1]) - 1;
+            face.tIndices.push(ti);
+        } else {
+            face.tIndices.push(-1);
         }
         if (subWords.length >= 3) {
             var ni = parseInt(subWords[2]) - 1;
@@ -269,12 +276,7 @@ OBJDoc.prototype.parseFace = function (sp, materialName, vertices, reverse) {
         } else {
             face.nIndices.push(-1);
         }
-        if (subWords.length >= 5) {
-            var ti = parseInt(subWords[4]) - 1;
-            face.tIndices.push(ti);
-        } else {
-            face.tIndices.push(-1);
-        }
+
     }
 
     // calc normal
@@ -293,16 +295,14 @@ OBJDoc.prototype.parseFace = function (sp, materialName, vertices, reverse) {
 
     // 计算面的法线
     var normal = calcNormal(v0, v1, v2);
-    console.log(normal)
     if (normal == null) {
-        normal = [0.0, 1.0, 0.0];
+        normal = new Vector3([0.0, 1.0, 0.0]);
     }
     if (reverse) {
-        normal[0] = -normal[0];
-        normal[1] = -normal[1];
-        normal[2] = -normal[2];
+        normal = normal.scalarmultiply(-1);
     }
-    face.normal = new Normal(normal[0], normal[1], normal[2]);
+    face.normal = normal;
+
 
     // Devide to triangles if face contains over 3 points.
     if (face.vIndices.length > 3) {
@@ -327,11 +327,12 @@ OBJDoc.prototype.parseFace = function (sp, materialName, vertices, reverse) {
     }
     face.numIndices = face.vIndices.length;
 
+    // console.log(face)
     return face;
 }
 
 // Analyze the material file
-function onReadMTLFile(fileString, mtl) {
+function onReadMTLFile(gl, fileString, mtl) {
     var lines = fileString.split('\n');  // Break up into lines and store them as array
     lines.push(null);           // Append null
     var index = 0;              // Initialize index of line
@@ -353,10 +354,11 @@ function onReadMTLFile(fileString, mtl) {
             case 'newmtl': // Read Material chunk
                 name = mtl.parseNewmtl(sp);    // Get name
                 if (material.name !== "") {
-                    mtl.materials.push(material);
                     material = new Material(name);
+                    mtl.materials.set(name, material);
                 } else {
                     material.name = name;
+                    mtl.materials.set(name, material);
                 }
                 continue; // Go to the next line
             case 'Ka':   // Read ambient
@@ -371,32 +373,40 @@ function onReadMTLFile(fileString, mtl) {
                 if (name === "") continue; // Go to the next line because of Error
                 material.specular = mtl.parseRGB(sp);
                 continue; // Go to the next line
+            case 'Ns':   // Read diffuse
+                if (name === "") continue; // Go to the next line because of Error
+                material.shininess = sp.getFloat();
+                continue; // Go to the next line
             case 'map_Ka':   // Read ambient map{
                 if (name === "") continue; // Go to the next line because of Error
                 path = sp.getWord();
                 if (material.ambientNr === 0) {
-                    material.ambientTexture = new Texture(gl, path, "ambient");
+                    material.ambientTexture = new Texture(gl, getDirectoryPath(mtl.fileName) + path, "ambient");
+                    material.ambientNr = 1;
                 }
                 continue; // Go to the next line
             case 'map_Kd':   // Read diffuse map
                 if (name === "") continue; // Go to the next line because of Error
                 path = sp.getWord();
                 if (material.diffuseNr === 0) {
-                    material.diffuseTexture = new Texture(gl, path, "diffuse");
+                    material.diffuseTexture = new Texture(gl, getDirectoryPath(mtl.fileName) + path, "diffuse");
+                    material.diffuseNr = 1;
                 }
                 continue; // Go to the next line
             case 'map_Ks':   // Read specular map
                 if (name === "") continue; // Go to the next line because of Error
                 path = sp.getWord();
                 if (material.specularNr === 0) {
-                    material.specularTexture = new Texture(gl, path, "specular");
+                    material.specularTexture = new Texture(gl, getDirectoryPath(mtl.fileName) + path, "specular");
+                    material.specularNr = 1;
                 }
                 continue; // Go to the next line
             case 'map_bump':   // Read height map
                 if (name === "") continue; // Go to the next line because of Error
                 path = sp.getWord();
                 if (material.heightNr === 0) {
-                    material.heightTexture = new Texture(gl, path, "height");
+                    material.heightTexture = new Texture(gl, getDirectoryPath(mtl.fileName) + path, "height");
+                    material.heightNr = 1;
                 }
                 continue; // Go to the next line
 
@@ -411,88 +421,95 @@ OBJDoc.prototype.isMTLComplete = function () {
     if (this.mtls.length === 0) return true;
     for (let i = 0; i < this.mtls.length; i++) {
         if (!this.mtls[i].complete) {
-            console.log("mtl false")
             return false;
         } else {
             let mtl = this.mtls[i];
-            for (let j = 0; j < mtl.materials.length; j++) {
-                if (!mtl.materials[j].iscomplete()) {
-                    console.log("materials false")
-                    return false;
-                }
-            }
+            mtl.materials.forEach(function (material, name, materials) {
+                if (!material.iscomplete()) return false;
+            })
         }
     }
-    console.log("mtl complete")
     return true;
 }
 
-//------------------------------------------------------------------------------
-// Retrieve the information for drawing 3D model
-OBJDoc.prototype.getDrawingInfo = function () {
-    // Create an arrays for vertex coordinates, normals, colors, and indices
-    var numIndices = 0;
-    for (var i = 0; i < this.objects.length; i++) {
-        numIndices += this.objects[i].numIndices;
+OBJDoc.prototype.Translate = function () {
+    let numIndices = 0;
+    for (let i = 0; i < this.nodes.length; i++) {
+        numIndices += this.nodes[i].numIndices;
     }
-    var numVertices = numIndices;
-    var vertices = new Float32Array(numVertices * 3);
-    var normals = new Float32Array(numVertices * 3);
-    var texcords = new Float32Array(numVertices * 2);
-    var indices = new Uint16Array(numIndices);
-
-    // console.log(this.vertices);
-    // console.log(this.objects[0]);
+    let numVertices = numIndices;
+    let vertices = new Float32Array(numVertices * 3);
+    let texcords = new Float32Array(numVertices * 2);
+    let normals = new Float32Array(numVertices * 3);
 
     // Set vertex, normal and color
-    var index_indices = 0;
-    for (var i = 0; i < this.objects.length; i++) {
-        var object = this.objects[i];
-        for (var j = 0; j < object.faces.length; j++) {
-            var face = object.faces[j];
-            var faceNormal = face.normal;
-            for (var k = 0; k < face.vIndices.length; k++) {
+    let index_indices = 0;
+    for (let i = 0; i < this.nodes.length; i++) {
+        let node = this.nodes[i];
+        node.indices = new Uint32Array(node.numIndices);
+        let index_node_indices =0;
+        let foundmaterial = false;
+        for(let j=0;j<this.mtls.length;j++){
+            let material = this.mtls[j].materials.get(node.materialName);
+            if(material !=null){
+                node.material = material;
+                foundmaterial = true;
+                console.log("Node found material");
+                break;
+            }
+        }
+        if(!foundmaterial)console.log("Node has no material");
+        for (let j = 0; j < node.faces.length; j++) {
+            let face = node.faces[j];
+            let faceNormal = face.normal;
+            for (let k = 0; k < face.vIndices.length; k++) {
                 // Set index
-                indices[index_indices] = index_indices;
+                node.indices[index_node_indices] = index_indices;
                 // Copy vertex
-                var vIdx = face.vIndices[k];
-                var vertex = this.vertices[vIdx];
+                let vIdx = face.vIndices[k];
+                let vertex = this.vertices[vIdx];
+                // console.log(vIdx,vertex);
                 vertices[index_indices * 3 + 0] = vertex.elements[0];
                 vertices[index_indices * 3 + 1] = vertex.elements[1];
                 vertices[index_indices * 3 + 2] = vertex.elements[2];
                 // Copy Texture coordinates
-                var tIdx = face.tIndices[k];
+                let tIdx = face.tIndices[k];
                 if (tIdx >= 0) {
-                    var texcord = this.texcords[vIdx];
+                    let texcord = this.texcords[vIdx];
                     texcords[index_indices * 2 + 0] = texcord.elements[0];
                     texcords[index_indices * 2 + 1] = texcord.elements[1];
                 }
                 // Copy normal
-                var nIdx = face.nIndices[k];
+                let nIdx = face.nIndices[k];
                 if (nIdx >= 0) {
-                    var normal = this.normals[nIdx];
+                    let normal = this.normals[nIdx];
                     normals[index_indices * 3 + 0] = normal.elements[0];
                     normals[index_indices * 3 + 1] = normal.elements[1];
                     normals[index_indices * 3 + 2] = normal.elements[2];
                 } else {
-                    normals[index_indices * 3 + 0] = faceNormal.x;
-                    normals[index_indices * 3 + 1] = faceNormal.y;
-                    normals[index_indices * 3 + 2] = faceNormal.z;
+                    normals[index_indices * 3 + 0] = faceNormal.elements[0];
+                    normals[index_indices * 3 + 1] = faceNormal.elements[1];
+                    normals[index_indices * 3 + 2] = faceNormal.elements[2];
                 }
+                index_node_indices++;
                 index_indices++;
             }
         }
+        node.faces = null;
     }
 
-    return new DrawingInfo(vertices, normals, texcords, indices);
+    this.vertices = vertices;
+    this.texcords = texcords;
+    this.normals = normals;
 }
 
 //------------------------------------------------------------------------------
 // MTLDoc Object
 //------------------------------------------------------------------------------
-var MTLDoc = function () {
+var MTLDoc = function (fileName) {
+    this.fileName = fileName;
     this.complete = false; // MTL is configured correctly
-    this.materials = new Array(0);
+    this.materials = new Map();
 }
 
 MTLDoc.prototype.parseNewmtl = function (sp) {
@@ -511,124 +528,96 @@ MTLDoc.prototype.parseRGB = function (sp) {
 //------------------------------------------------------------------------------
 var Material = function (name) {
     this.name = name;
-    this.ambient = new Vector3([0,0,0]);
-    this.diffuse = new Vector3([0,0,0]);
-    this.specular = new Vector3([0,0,0]);
+    this.ambient = new Vector3([0, 0, 0]);
+    this.diffuse = new Vector3([0, 0, 0]);
+    this.specular = new Vector3([0, 0, 0]);
+    this.shininess = 10;
+    this.ambientTexture = null;
+    this.diffuseTexture = null;
+    this.specularTexture = null;
+    this.heightTexture = null;
+    this.normalTexture = null;
     this.ambientNr = 0;
     this.diffuseNr = 0;
     this.specularNr = 0;
     this.heightNr = 0;
     this.normalNr = 0;
+
+    this.load = null;
 }
 
-Material.prototype.apply = function(gl){
-    var location = gl.getUniformLocation(gl.program,"material.ambient");
-    gl.uniform3fv(location,this.ambient.elements);
-    location = gl.getUniformLocation(gl.program,"material.diffuse");
-    gl.uniform3fv(location,this.diffuse.elements);
-    location = gl.getUniformLocation(gl.program,"material.specular");
-    gl.uniform3fv(location,this.specular.elements);
+Material.prototype.apply = function (gl) {
+
+    var location = gl.getUniformLocation(gl.program, "material.ambient");
+    gl.uniform3fv(location, this.ambient.elements);
+    location = gl.getUniformLocation(gl.program, "material.diffuse");
+    gl.uniform3fv(location, this.diffuse.elements);
+    location = gl.getUniformLocation(gl.program, "material.specular");
+    gl.uniform3fv(location, this.specular.elements);
+    location = gl.getUniformLocation(gl.program, "material.shininess");
+    gl.uniform1f(location, this.shininess);
+
+    // Textures
+    if (this.ambientTexture != null) {
+        this.ambientTexture.load(gl);
+    }
+    if (this.diffuseTexture != null) {
+        this.diffuseTexture.load(gl);
+    }
+    if (this.specularTexture != null) {
+        this.specularTexture.load(gl);
+    }
 }
 
 Material.prototype.iscomplete = function () {
-    if(this.ambientNr>0){
-        if(!this.ambientTexture.complete)return false;
+    if (this.ambientNr > 0) {
+        if (!this.ambientTexture.complete) return false;
     }
-    if(this.diffuseNr>0){
-        if(!this.diffuseTexture.complete)return false;
+    if (this.diffuseNr > 0) {
+        if (!this.diffuseTexture.complete) return false;
     }
-    if(this.specularNr>0){
-        if(!this.specularTexture.complete)return false;
+    if (this.specularNr > 0) {
+        if (!this.specularTexture.complete) return false;
     }
-    if(this.heightNr>0){
-        if(!this.heightTexture.complete)return false;
+    if (this.heightNr > 0) {
+        if (!this.heightTexture.complete) return false;
     }
     // if(this.normalNr>0){
     //     if(!this.normalTexture.complete)return false;
     // }
     return true;
 }
-var LoadedTextures;
 var TextureNum = 0;
 var Texture = function (gl, path, type) {
-    console.log("load tex "+path)
-    if (LoadedTextures.hasOwnProperty(path)) {
-        return Textures[path];
-    } else {
-        this.complete = false;
-        this.id = TextureNum++;
-        LoadedTextures[path] = this;
-        var image = new Image(path);
-        image.onload = function () {
-            this.uniformName = "material." + type + "Tex";
-            this.NrName = "material." + type + "Nr";
-            this.sampler = gl.getUniformLocation(gl.program, this.uniformName);
-            this.Nr = gl.getUniformLocation(gl.program, this.NrName);
-            this.texture = gl.createTexture();
-            this.load = function () {
-                gl.activeTexture(gl.TEXTURE0 + this.id);
-                gl.bindTexture(gl.TEXTURE_2D, this.texture);
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
-                gl.generateMipmap(gl.TEXTURE_2D);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                gl.uniform1i(this.sampler, this.id);
-                gl.uniform1i(this.Nr, 1);
-            };
-            this.complete = true;
-        }.bind(this);
-        image.src = path;
-    }
-}
+    console.log("load tex " + path)
+    this.complete = false;
+    this.id = TextureNum++;
+    var image = new Image(path);
+    image.onload = function () {
+        console.log("texture ", path, "loaded:");
+        this.uniformName = "material." + type + "Tex";
+        this.NrName = "material." + type + "Nr";
+        this.sampler = gl.getUniformLocation(gl.program, this.uniformName);
+        this.Nr = gl.getUniformLocation(gl.program, this.NrName);
+        this.texture = gl.createTexture();
 
-//------------------------------------------------------------------------------
-// Vertex Object
-//------------------------------------------------------------------------------
-var Vertex = function (x, y, z) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-}
+        gl.activeTexture(gl.TEXTURE0 + this.id);
+        gl.bindTexture(gl.TEXTURE_2D, this.texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        this.complete = true;
+        console.log(this)
+    }.bind(this);
+    image.src = path;
 
-//------------------------------------------------------------------------------
-// Normal Object
-//------------------------------------------------------------------------------
-var Normal = function (x, y, z) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
 }
-
-//------------------------------------------------------------------------------
-// Color Object
-//------------------------------------------------------------------------------
-var ColorRGBA = function (r, g, b, a) {
-    this.r = r;
-    this.g = g;
-    this.b = b;
-    this.a = a;
-}
-
-var ColorRGB = function (r, g, b) {
-    this.r = r;
-    this.g = g;
-    this.b = b;
-}
-
-//------------------------------------------------------------------------------
-// OBJObject Object
-//------------------------------------------------------------------------------
-var OBJObject = function (name) {
-    this.name = name;
-    this.faces = new Array(0);
-    this.numIndices = 0;
-}
-
-OBJObject.prototype.addFace = function (face) {
-    this.faces.push(face);
-    this.numIndices += face.numIndices;
+Texture.prototype.load = function (gl) {
+    gl.uniform1i(this.sampler, this.id);
+    gl.uniform1i(this.Nr, 1);
 }
 
 //------------------------------------------------------------------------------
@@ -640,16 +629,6 @@ var Face = function (materialName) {
     this.vIndices = new Array(0);
     this.nIndices = new Array(0);
     this.tIndices = new Array(0);
-}
-
-//------------------------------------------------------------------------------
-// DrawInfo Object
-//------------------------------------------------------------------------------
-var DrawingInfo = function (vertices, normals, texcords, indices) {
-    this.vertices = vertices;
-    this.normals = normals;
-    this.texcords = texcords;
-    this.indices = indices;
 }
 
 //------------------------------------------------------------------------------
@@ -687,7 +666,7 @@ StringParser.prototype.skipToNextWord = function () {
 StringParser.prototype.getWord = function () {
     this.skipDelimiters();
     var n = getWordLength(this.str, this.index);
-    if (n == 0) return null;
+    if (n === 0) return null;
     var word = this.str.substr(this.index, n);
     this.index += (n + 1);
 
@@ -735,5 +714,5 @@ function calcNormal(p0, p1, p2) {
     // Normalize the result
     var v = new Vector3(c);
     v.normalize();
-    return v.elements;
+    return v;
 }
