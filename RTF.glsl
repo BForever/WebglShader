@@ -26,13 +26,15 @@ struct HitRecord{
 };
 
 struct Material{
+    bool refract;
     bool reflect;
     bool diffuse;
     vec3 albedo;
     float fuzz;
+    float refidx;
 };
 
-Material materials[3];
+Material materials[4];
 
 struct Sphere{
     vec3 center;
@@ -55,6 +57,7 @@ float RandXY(float x, float y);
 float Rand();
 vec3 RandomPointInUnitSphere();
 vec2 RandomPointInUnitCircle();
+bool _refract(vec3 v, vec3 n,float ni_over_nt,out vec3 refracted);
 vec3 SkyColor(Ray ray);
 vec3 getColor(Ray ray,float tmin,float tmax);
 vec3 GetPoint(Ray ray,float t);
@@ -79,16 +82,20 @@ void initData(vec4 FragCoord){
 
     materials[1].reflect = false;
     materials[1].diffuse = true;
-    materials[1].albedo = vec3(0.3,0.5,0);
+    materials[1].albedo = vec3(0.8,0.8,0);
 
     materials[2].reflect = false;
     materials[2].diffuse = true;
-    materials[2].albedo = vec3(0.4,0.2,0.3);
+    materials[2].albedo = vec3(0.8,0.3,0.3);
+
+    materials[3].refract = true;
+    materials[3].refidx = 1.5;
+    materials[3].albedo = vec3(0.8,0.3,0.3);
 
     // Spheres
     spheres[1].center = vec3(0,0,-1);
     spheres[1].radius = 0.3;
-    spheres[1].materialID = 0;
+    spheres[1].materialID = 2;
 
     spheres[0].center = vec3(0,-100.3,-1);
     spheres[0].radius = 100.0;
@@ -96,11 +103,11 @@ void initData(vec4 FragCoord){
 
     spheres[2].center = vec3(-0.6,0,-1);
     spheres[2].radius = 0.3;
-    spheres[2].materialID = 2;
+    spheres[2].materialID = 0;
 
     spheres[3].center = vec3(0.6,0,-1);
     spheres[3].radius = 0.3;
-    spheres[3].materialID = 2;
+    spheres[3].materialID = 3;
 
 
 }
@@ -112,7 +119,7 @@ void main() {
     int i;
     for(i=0;i<SampleRate;i++){
         ray = GenRay(u+Rand()*0.0/width,v+Rand()*0.0/height);
-        color += getColor(ray,0.0001,200.0);
+        color += getColor(ray,0.0001,300.0);
     }
 
     FragColor = vec4(color/float(SampleRate),1);
@@ -122,21 +129,21 @@ vec3 getColor(Ray ray,float tmin,float tmax){
     bool hit=true;
     Ray tempRay = ray;
     vec3 colorFactor=vec3(1);
-    int depth=15;
+    int depth=35;
 
+    // Trace loop
     while(hit&&depth>0){
         HitRecord record;
         float closest = tmax;
         hit = false;
 
-        // Check hit
+        // Check closest hit
         int i;
         for(i=0;i<Num_spheres;i++){
             HitRecord temprec;
             if(HitSphere(spheres[i],tempRay,tmin,closest,temprec)){
-                // Update
                 hit = true;
-                closest = record.t;
+                closest = temprec.t;
                 record = temprec;
             }
         }
@@ -144,16 +151,42 @@ vec3 getColor(Ray ray,float tmin,float tmax){
         if(hit){
             // Material
             Material mt = materials[record.materialID];
-            colorFactor *= mt.albedo;
-            tempRay.origin = record.p;
-            if(mt.reflect){
-                 tempRay.direction = normalize(reflect(tempRay.direction,record.normal)+mt.fuzz*RandomPointInUnitSphere());
+            vec3 outnormal;
+            vec3 reflected = reflect(tempRay.direction,record.normal);
+            if(mt.refract){
+                float ni_over_nt;
+                vec3 refracted;
+
+                if(dot(tempRay.direction,record.normal)>0.0){
+                    outnormal = -record.normal;
+                    ni_over_nt = mt.refidx;
+                }else{
+                    outnormal = record.normal;
+                    ni_over_nt = 1.0/mt.refidx;
+                }
+
+                if(_refract(tempRay.direction,outnormal,ni_over_nt,refracted)){
+                    tempRay.origin = record.p;
+                    tempRay.direction = normalize(refracted);
+                }else{
+                    colorFactor *= mt.albedo;
+                    tempRay.origin = record.p;
+                    tempRay.direction = normalize(reflected+mt.fuzz*RandomPointInUnitSphere());
+                }
+
             }else{
-                 tempRay.direction = normalize(record.normal + RandomPointInUnitSphere());
+                colorFactor *= mt.albedo;
+                tempRay.origin = record.p;
+                if(mt.reflect){
+                     tempRay.direction = normalize(reflected+mt.fuzz*RandomPointInUnitSphere());
+                }else{
+                     tempRay.direction = normalize(record.normal + RandomPointInUnitSphere());
+                }
             }
 
             // Limit
             depth--;
+//            return (vec3(sqrt(record.t)));
         }
 
     }
@@ -167,33 +200,36 @@ vec3 SkyColor(Ray ray){
 
 bool HitSphere(Sphere sphere, Ray ray,float tmin,float tmax,out HitRecord rec)
 {
+    ray.direction = normalize(ray.direction);
     rec.materialID = sphere.materialID;
     vec3 center = sphere.center;
     float radius = sphere.radius;
     vec3 oc = ray.origin - center;
     float a = dot(ray.direction,  ray.direction);
-    float b = 2.0 * dot(oc, ray.direction);
+    float b = dot(oc, ray.direction);
     float c = dot(oc, oc) - radius * radius;
     //实际上是判断这个方程有没有根，如果有2个根就是击中
-    float discriminant = b * b - 4.0 * a * c;
+    float discriminant = b * b - a * c;
     if (discriminant > 0.0)
     {
          //带入并计算出最靠近射线源的点
-         float temp = (-b - sqrt(discriminant)) / a * 0.5;
+         float temp = (-b - sqrt(discriminant)) / a;
          if (temp < tmax && temp > tmin)
          {
                rec.t = temp;
                rec.p = GetPoint(ray,rec.t);
                rec.normal = normalize(rec.p - center);
+               rec.materialID = sphere.materialID;
                return true;
          }
          //否则就计算远离射线源的点
-         temp = (-b + sqrt(discriminant)) / a * 0.5;
+         temp = (-b + sqrt(discriminant)) / a;
          if (temp < tmax && temp > tmin)
          {
                rec.t = temp;
                rec.p = GetPoint(ray,rec.t);
                rec.normal = normalize(rec.p - center);
+               rec.materialID = sphere.materialID;
                return true;
          }
     }
@@ -210,10 +246,12 @@ float RandXY(float x, float y){
      return fract(cos(x * (12.9898) + y * (4.1414)) * 43758.5453);
 }
 float Rand(){
-    float r1 = RandXY(u, randomSeed);
-    float r2 = RandXY(v, float(randCnt++));
+    float r1 = RandXY(float(randCnt++), randomSeed);
+    float r2 = RandXY(randomSeed,float(randCnt++) );
     float r3 = RandXY(r1, r2);
-    return r3;
+    float r4 = RandXY(u, r3);
+    float r5 = RandXY(v, r4);
+    return r5;
 }
 
 vec3 RandomPointInUnitSphere(){
@@ -222,4 +260,16 @@ vec3 RandomPointInUnitSphere(){
 
 vec2 RandomPointInUnitCircle(){
     return Rand()*normalize(vec2(Rand(),Rand()));
+}
+
+bool _refract(vec3 v, vec3 n,float ni_over_nt,out vec3 refracted){
+    vec3 uv = normalize(v);
+    float dt = dot(uv,n);
+    float discriminant = 1.0 - ni_over_nt*ni_over_nt*(1.0-dt*dt);
+    if(discriminant > 0.0){
+        refracted = ni_over_nt * (uv - n*dt) - n*sqrt(discriminant);
+        return true;
+    }else{
+        return false;
+    }
 }

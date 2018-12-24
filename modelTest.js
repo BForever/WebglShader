@@ -1,18 +1,3 @@
-var vertexShaderSource = "" +
-    "attribute vec4 a_Position;\n" +
-    "attribute vec4 a_Color;\n" +
-    "attribute vec4 a_Normal;\n" +
-    "uniform mat4 u_MvpMatrix;\n" +
-    "uniform mat4 u_NormalMatrix;\n" +
-    "varying vec4 v_Color;\n" +
-    "void main(){\n" +
-    "   vec3 lightDirection = vec3(-0.35, 0.35, 0.87);\n" +
-    "   gl_Position = u_MvpMatrix * a_Position;\n" +
-    "   vec3 normal = normalize(vec3(u_NormalMatrix * a_Normal));\n" +
-    "   float nDotL = max(dot(normal, lightDirection), 0.0);\n" +
-    "   v_Color = vec4(a_Color.rgb * nDotL, a_Color.a);\n" +
-    "}\n";
-
 var objv =`#version 300 es
 in vec3 aPosition;
 in vec3 aNormal;
@@ -237,19 +222,6 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     return ambient+attenuation*intensity*(diffuse+specular);
 }`;
 
-
-//片元着色器
-var fragmentShaderSource = "" +
-    "#ifdef GL_ES\n" +
-    "precision mediump float;\n" +
-    "#endif\n" +
-    "varying vec4 v_Color;\n" +
-    "void main(){\n" +
-    "   gl_FragColor = v_Color;\n" +
-    "}\n";
-
-
-
 function main() {
     var canvas = document.getElementById("canvas");
     var gl = canvas.getContext('webgl2');
@@ -313,7 +285,7 @@ function main() {
 
 
     //读取OBJ文件
-    model.readOBJFile("resources/moon.obj", gl, true);
+    model.readOBJFile("resources/file.obj", gl, true);
 
 
     var currentAngle = 0.0; //当前模型的旋转角度
