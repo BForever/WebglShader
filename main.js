@@ -1,112 +1,50 @@
-initGL();
-window.onresize = initGL;
+function main() {
+    // Programs
+    let skyboxProgram = loadShaders(gl, "skyBoxVshader.glsl", "skyBoxFshader.glsl");
+    skyboxProgram.aPosition = gl.getAttribLocation(skyboxProgram, "aPosition");
+    skyboxProgram.uView = gl.getUniformLocation(skyboxProgram, "uView");
+    skyboxProgram.uProjection = gl.getUniformLocation(skyboxProgram, "uProjection");
+    skyboxProgram.skybox = gl.getUniformLocation(skyboxProgram, "skybox");
 
-var vsScript = `
-attribute vec3 aPos;
-varying vec3 vColor;
-varying vec3 pos;
-void main()
-{
-    gl_Position = vec4(aPos, 1.0);
-    pos = aPos;
-    vColor = aPos;
-}
-`;
-var fsScript = `
-precision highp float;
-varying vec3 vColor;
-varying vec3 pos;
-void main() {
-// gl_FragColor = vec4(vec3(0.2*length(pos)), 1.0);
-    if(length(pos)<0.795){
-        gl_FragColor = vec4(vec3(0), 1.0);
-    }
-    else{
-        gl_FragColor = vec4(1.0,vec2(0), 1.0);
-    }
-}
-`;
+    // Skybox
+    useProgram(gl, skyboxProgram);
+    let skybox = loadSkyBox(gl, "resources/hw_alps/alps");
+    gl.uniform1i(skyboxProgram.skybox, skybox);
 
-program = initShaders(gl,vsScript,fsScript);
-gl.useProgram(program);
+    // let skyboxVAO = gl.createVertexArray();
+    // gl.bindVertexArray(skyboxVAO);
 
-let num = 30;
-let temp = Math.cos(Math.PI / 4);
-let weights = [1, temp, 1, temp, 1, temp, 1, temp, 1,];
-let ctlPs = [
-    new Vector2(0, -0.8), new Vector2(0.8, -0.8), new Vector2(0.8, 0),
-    new Vector2(0.8, 0.8), new Vector2(0, 0.8), new Vector2(-0.8, 0.8),
-    new Vector2(-0.8, 0), new Vector2(-0.8, -0.8), new Vector2(0, -0.8),
-];
-let points = getRBC(3, weights.slice(0, 3), ctlPs.slice(0, 3), 0, 1, num);
-points = points.concat(getRBC(3, weights.slice(2, 5), ctlPs.slice(2, 5), 0, 1, num));
-points = points.concat(getRBC(3, weights.slice(4, 7), ctlPs.slice(4, 7), 0, 1, num));
-points = points.concat(getRBC(3, weights.slice(6, 9), ctlPs.slice(6, 9), 0, 1, num));
+    let skyboxVBO = createEmptyArrayBuffer(gl,skyboxProgram.aPosition,3,gl.FLOAT);
+    gl.bindBuffer(gl.ARRAY_BUFFER, skyboxVBO);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(skyboxVertices), gl.STATIC_DRAW);
 
-let circle = [];
-for (let i = 0; i <= 900; i++) {
-    circle.push(Math.cos(2 * Math.PI * i / 900) * 0.79);
-    circle.push(Math.sin(2 * Math.PI * i / 900) * 0.79);
-    circle.push(0);
-}
-
-var ext = gl.getExtension("OES_vertex_array_object");
-var VAO1 = ext.createVertexArrayOES();
-ext.bindVertexArrayOES(VAO1);
+    // Camera
 
 
-var VBO1 = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, VBO1);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
+    render();
 
-var aPos1 = gl.getAttribLocation(program, 'aPos');
-gl.vertexAttribPointer(aPos1, 3, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(aPos1);
+    function render() {
+        updateElapsed();
+        ProcessInput(camera);
 
-var VAO2 = ext.createVertexArrayOES();
-ext.bindVertexArrayOES(VAO2);
+        gl.clearColor(1, 1, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-var VBO2 = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, VBO2);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(circle), gl.STATIC_DRAW);
+        //计算模型视图投影矩阵
+        let projectionMatrix = new Matrix4();
+        projectionMatrix.setPerspective(camera.Zoom, canvas.width / canvas.height, 1.0, 1000.0);
+        let viewMatrix = camera.getViewMatrix();
+        //设置模型视图投影矩阵
+        useProgram(gl,skyboxProgram);
+        gl.uniformMatrix4fv(gl.program.uView, false, viewMatrix.elements);
+        gl.uniformMatrix4fv(gl.program.uProjection, false, projectionMatrix.elements);
 
-var aPos2 = gl.getAttribLocation(program, 'aPos');
-gl.vertexAttribPointer(aPos2, 3, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(aPos2);
+        // gl.bindVertexArray(skyboxVAO);
+        gl.drawArrays(gl.TRIANGLES, 0, 36);
 
-
-
-render();
-function render() {
-    //render here
-    // viewport();
-    gl.clearColor(0,1,1,1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    ext.bindVertexArrayOES(VAO1);
-    gl.drawArrays(gl.LINE_STRIP, 0, num * 4);
-    ext.bindVertexArrayOES(VAO2);
-    gl.drawArrays(gl.LINE_STRIP, 0, 900);
-
-    requestAnimationFrame(render);
-}
-
-function viewport() {
-    let winSize;
-
-    if(canvas.width>canvas.height) {
-        winSize = canvas.height;
-    }else {
-        winSize = canvas.width;
+        requestAnimationFrame(render);
     }
 
-    gl.viewport((canvas.width-winSize)/2,(canvas.height-winSize)/2,winSize,winSize);
 }
 
-function initGL() {
-    canvas = document.getElementById('canvas');
-    gl = canvas.getContext('webgl2');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    viewport();
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-}
+main();
