@@ -1,5 +1,6 @@
 initGL();
-window.onresize = initGL;
+var gl;
+var canvas;
 var camera = new Camera();
 
 // Keyboard
@@ -77,8 +78,5 @@ function viewport() {
 function initGL() {
     canvas = document.getElementById('canvas');
     gl = canvas.getContext('webgl2');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    viewport();
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
 }

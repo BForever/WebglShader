@@ -1,8 +1,8 @@
-const BOXDIRNAMES = ["rt","lf","up","dn","ft","bk"];
+const BOXDIRNAMES = ["rt","lf","up","dn","bk","ft"];
 
 function loadSkyBox(gl,boxpath) {
     let texture = gl.createTexture();
-
+    gl.activeTexture(gl.TEXTURE0);
     let images = [new Image(),new Image(),new Image(),new Image(),new Image(),new Image()];
     for(let i=0;i<6;i++){
         images[i].onload = ()=>{
@@ -14,7 +14,7 @@ function loadSkyBox(gl,boxpath) {
             gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         };
-        images[i].src = boxpath+"_"+BOXDIRNAMES[i]+".tga";
+        images[i].src = boxpath+"_"+BOXDIRNAMES[i]+".png";
     }
     return texture;
 }

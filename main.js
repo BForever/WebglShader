@@ -11,8 +11,8 @@ function main() {
     let skybox = loadSkyBox(gl, "resources/hw_alps/alps");
     gl.uniform1i(skyboxProgram.skybox, skybox);
 
-    // let skyboxVAO = gl.createVertexArray();
-    // gl.bindVertexArray(skyboxVAO);
+    let skyboxVAO = gl.createVertexArray();
+    gl.bindVertexArray(skyboxVAO);
 
     let skyboxVBO = createEmptyArrayBuffer(gl,skyboxProgram.aPosition,3,gl.FLOAT);
     gl.bindBuffer(gl.ARRAY_BUFFER, skyboxVBO);
@@ -20,9 +20,11 @@ function main() {
 
     // Camera
 
+    // Model
+
 
     render();
-
+    gl.enable(gl.DEPTH_TEST);
     function render() {
         updateElapsed();
         ProcessInput(camera);
@@ -32,14 +34,15 @@ function main() {
 
         //计算模型视图投影矩阵
         let projectionMatrix = new Matrix4();
-        projectionMatrix.setPerspective(camera.Zoom, canvas.width / canvas.height, 1.0, 1000.0);
+        projectionMatrix.setPerspective(camera.Zoom, canvas.width / canvas.height, 0.01, 1000.0);
         let viewMatrix = camera.getViewMatrix();
+        viewMatrix.removeTranslate();
         //设置模型视图投影矩阵
         useProgram(gl,skyboxProgram);
         gl.uniformMatrix4fv(gl.program.uView, false, viewMatrix.elements);
         gl.uniformMatrix4fv(gl.program.uProjection, false, projectionMatrix.elements);
 
-        // gl.bindVertexArray(skyboxVAO);
+        gl.bindVertexArray(skyboxVAO);
         gl.drawArrays(gl.TRIANGLES, 0, 36);
 
         requestAnimationFrame(render);
