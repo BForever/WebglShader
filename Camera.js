@@ -1,7 +1,7 @@
 // Default camera values
 const YAW = -90.0;
 const PITCH = 0.0;
-const SPEED = 0.025;
+const SPEED = 0.00025;
 const SENSITIVITY = 0.05;
 const ZOOM = 45.0;
 const DIRECTION = {
@@ -16,7 +16,7 @@ const DIRECTION = {
 };
 
 function Camera() {
-    this.Position = new Vector3([0,0,100]);
+    this.Position = new Vector3([0,0,2]);
     this.Front = new Vector3([0,0,-1]);
     this.Up = new Vector3([0,1,0]);
     this.Right = new Vector3([1,0,0]);

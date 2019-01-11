@@ -592,7 +592,7 @@ var Texture = function (gl, path, type) {
     console.log("load tex " + path)
     this.complete = false;
     this.id = TextureNum++;
-    var image = new Image(path);
+    var image = new Image();
     image.onload = function () {
         console.log("texture ", path, "loaded:");
         this.uniformName = "material." + type + "Tex";

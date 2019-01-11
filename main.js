@@ -104,7 +104,7 @@ function viewport() {
 
 function initGL() {
     canvas = document.getElementById('canvas');
-    gl = canvas.getContext('webgl');
+    gl = canvas.getContext('webgl2');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     viewport();
