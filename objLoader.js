@@ -587,7 +587,7 @@ Material.prototype.iscomplete = function () {
     // }
     return true;
 }
-var TextureNum = 0;
+var TextureNum = 1;
 var Texture = function (gl, path, type) {
     console.log("load tex " + path)
     this.complete = false;

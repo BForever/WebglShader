@@ -20,8 +20,6 @@ struct Material{
     int diffuseNr;
     sampler2D   specularTex;
     int specularNr;
-    sampler2D   normalTex;
-    int normalNr;
     sampler2D   heightTex;
     int heightNr;
     float       shininess;
@@ -40,7 +38,7 @@ struct PointLight {
     vec3 diffuse;
     vec3 specular;
 };
-#define NR_POINT_LIGHTS 4
+#define NR_POINT_LIGHTS 2
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 struct DirLight {
     vec3 direction;
@@ -85,11 +83,12 @@ void main()
     // 第二阶段：点光源
     for(int i = 0; i < NR_POINT_LIGHTS; i++)
         result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);
-    // 第三阶段：聚光
+    //第三阶段：聚光
     for(int i = 0; i < NR_SPOT_LIGHTS; i++)
         result += CalcSpotLight(spotLights[i], norm, FragPos, viewDir);
 
     FragColor = vec4(result, 1.0);
+    FragColor = vec4(dirLight.diffuse, 1.0);
 //    FragColor = vec4(texture(material.diffuse[0], TexCoords));
 }
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)

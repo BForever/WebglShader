@@ -1,53 +1,56 @@
 function main() {
-    // Programs
-    let skyboxProgram = loadShaders(gl, "skyBoxVshader.glsl", "skyBoxFshader.glsl");
-    skyboxProgram.aPosition = gl.getAttribLocation(skyboxProgram, "aPosition");
-    skyboxProgram.uView = gl.getUniformLocation(skyboxProgram, "uView");
-    skyboxProgram.uProjection = gl.getUniformLocation(skyboxProgram, "uProjection");
-    skyboxProgram.skybox = gl.getUniformLocation(skyboxProgram, "skybox");
-
     // Skybox
-    useProgram(gl, skyboxProgram);
-    let skybox = loadSkyBox(gl, "resources/hw_alps/alps");
-    gl.uniform1i(skyboxProgram.skybox, skybox);
+    let skybox = new SkyBox(gl,"resources/hw_alps/alps");
 
-    let skyboxVAO = gl.createVertexArray();
-    gl.bindVertexArray(skyboxVAO);
+    let objlist = [];
+    objlist.push(new Sphere(gl,48,24,new Vector3([1,0,1]),new Vector3([1,0,1]),new Vector3([1,0,1]),32));
+    objlist.push(new Cube(gl,new Vector3([1,0,1]),new Vector3([1,0,1]),new Vector3([1,0,1]),32));
+    // Light
+    let dirlight = new DirLight();
+    dirlight.direction = new Vector3([1,-1,1]);
 
-    let skyboxVBO = createEmptyArrayBuffer(gl,skyboxProgram.aPosition,3,gl.FLOAT);
-    gl.bindBuffer(gl.ARRAY_BUFFER, skyboxVBO);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(skyboxVertices), gl.STATIC_DRAW);
+    for(let obj of objlist){
+        dirlight.use(gl,obj.program);
+    }
 
-    // Camera
-
+    // console.log(objlist)
     // Model
 
-
-    render();
     gl.enable(gl.DEPTH_TEST);
+    render();
+
+    let i=0;
+    for(let obj of objlist){
+        obj.modelMatrix.translate(2*i,0,0);
+        i++;
+    }
+
     function render() {
         updateElapsed();
         ProcessInput(camera);
 
-        gl.clearColor(1, 1, 0, 1);
+        gl.clearColor(0.2, 0.2, 0.2, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        //计算模型视图投影矩阵
-        let projectionMatrix = new Matrix4();
+        // 计算模型视图投影矩阵
+        projectionMatrix = new Matrix4();
         projectionMatrix.setPerspective(camera.Zoom, canvas.width / canvas.height, 0.01, 1000.0);
-        let viewMatrix = camera.getViewMatrix();
-        viewMatrix.removeTranslate();
-        //设置模型视图投影矩阵
-        useProgram(gl,skyboxProgram);
-        gl.uniformMatrix4fv(gl.program.uView, false, viewMatrix.elements);
-        gl.uniformMatrix4fv(gl.program.uProjection, false, projectionMatrix.elements);
+        viewMatrix = camera.getViewMatrix();
 
-        gl.bindVertexArray(skyboxVAO);
-        gl.drawArrays(gl.TRIANGLES, 0, 36);
+        // Scene
+        let i=0;
+        for(let obj of objlist){
+            obj.draw(gl);
+            i++;
+        }
+
+        // Sky box
+        skybox.draw(gl);
 
         requestAnimationFrame(render);
     }
 
 }
-
+var projectionMatrix;
+var viewMatrix;
 main();

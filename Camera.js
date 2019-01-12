@@ -16,7 +16,7 @@ const DIRECTION = {
 };
 
 function Camera() {
-    this.Position = new Vector3([0,0,0]);
+    this.Position = new Vector3([0,0,2]);
     this.Front = new Vector3([0,0,-1]);
     this.Up = new Vector3([0,1,0]);
     this.Right = new Vector3([1,0,0]);
