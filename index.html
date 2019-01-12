@@ -7,18 +7,66 @@
         html, body {
             padding: 0;
             margin: 0;
+            text-align:center
         }
         /*#canvas {*/
             /*margin: 10px;*/
             /*border: 1px solid black;*/
         /*}*/
+        div {
+            margin: 10px;
+            border: 1px solid black;
+        }
     </style>
 
 </head>
 <body>
-    <div style="float:left;text-align:center;">
+    <div style="margin:0 auto">
         <canvas id="canvas" width="640" height="480"></canvas>
     </div>
+    dirLight:
+    <div>
+        ambient:
+        <input id="dirLight_ambient" type="color" value="#FFFFFF" />
+        diffuse:
+        <input id="dirLight_diffuse" type="color" value="#FFFFFF"/>
+        specular:
+        <input id="dirLight_specular" type="color" value="#FFFFFF"/>
+        <br>
+
+        <div>
+            direction:<br>
+            x:<input id="dirLight_direction_x" type="number" value="1"/><br>
+            y:<input id="dirLight_direction_y" type="number" value="-1"/><br>
+            z:<input id="dirLight_direction_z" type="number" value="1"/><br>
+        </div>
+    </div>
+
+    pointLight:
+    <div>
+        ambient:
+        <input id="pointLight_ambient" type="color" value="#000000" />
+        diffuse:
+        <input id="pointLight_diffuse" type="color" value="#000000"/>
+        specular:
+        <input id="pointLight_specular" type="color" value="#000000"/>
+        constant:
+        <input id="pointLight_constant" type="number" value="1"/>
+        linear:
+        <input id="pointLight_linear" type="range" min="0.01" max = "1" step="0.05" value="0.09"/>
+        quadratic:
+        <input id="pointLight_quadratic" type="range" min="0.00001" max = "2" step="0.02" value="0.032"/>
+        <br>
+
+        <div>
+            position:<br>
+            x:<input id="pointLight_position_x" type="number" value="20"/><br>
+            y:<input id="pointLight_position_y" type="number" value="-20"/><br>
+            z:<input id="pointLight_position_z" type="number" value="20"/><br>
+        </div>
+    </div>
+
+
     <script src="lib/webgl-utils.js"></script>
     <script src="lib/webgl-debug.js"></script>
     <script src="lib/cuon-utils.js"></script>

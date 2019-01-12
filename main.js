@@ -1,3 +1,4 @@
+
 function main() {
     // Skybox
     let skybox = new SkyBox(gl, "resources/hw_alps/alps");
@@ -23,15 +24,6 @@ function main() {
     objlist.push(new Cone(gl, 70, new Vector3([0.0, 0.1, 0.06]), new Vector3([0.0, 0.50980392, 0.50980392]), new Vector3([0.50196078, 0.50196078, 0.50196078]), 0.25));
     objlist.push(new Prism(gl, 7, new Vector3([0.1745	,0.01175,	0.01175]), new Vector3([0.61424,	0.04136	,0.04136]), new Vector3([0.727811	,0.626959	,0.626959]), 0.6));
     objlist.push(new Frustum(gl, 0.5, 7, new Vector3([0.19225, 0.19225, 0.19225]), new Vector3([0.50754, 0.50754, 0.50754]), new Vector3([0.508273, 0.508273, 0.508273]), 0.4));
-    // Light
-    let dirlight = new DirLight();
-    dirlight.direction = new Vector3([1, -1, 1]);
-
-    for (let obj of objlist) {
-        dirlight.use(gl, obj.program);
-    }
-    dirlight.use(gl, model.program);
-    dirlight.use(gl, texturemodel.program);
 
     gl.enable(gl.DEPTH_TEST);
     render();
@@ -46,6 +38,19 @@ function main() {
     function render() {
         updateElapsed();
         ProcessInput(camera);
+
+        if(setupChanged){
+            setupChanged = false;
+
+            // dirLight
+            for (let obj of objlist) {
+                dirlight.use(gl, obj.program);
+            }
+            dirlight.use(gl, model.program);
+            dirlight.use(gl, texturemodel.program);
+
+
+        }
 
         gl.clearColor(0.2, 0.2, 0.2, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -69,6 +74,8 @@ function main() {
     }
 
 }
+
+
 
 var projectionMatrix;
 var viewMatrix;

@@ -58,7 +58,7 @@ Model.prototype.readOBJFile = function (filename, gl, reverse) {
 //obj文件读取成功后开始解析
 Model.prototype.onReadOBJFile = function (fileString, fileName, gl, reverse) {
     var objDoc = new OBJDoc(fileName); // 创建一个OBJDoc 对象
-    var result = objDoc.parse(gl, fileString, reverse); //解析文件
+    var result = objDoc.parse(gl,this.program, fileString, reverse); //解析文件
     if (!result) {
         console.log("obj文件解析错误");
     } else {
@@ -152,7 +152,7 @@ function OBJDoc(fileName) {
 }
 
 // Parsing the OBJ file
-OBJDoc.prototype.parse = function (gl, fileString, reverse) {
+OBJDoc.prototype.parse = function (gl,program, fileString, reverse) {
     var lines = fileString.split('\n');  // Break up into lines and store them as array
     lines.push(null); // Append null
     var index = 0;    // Initialize index of line
@@ -179,7 +179,7 @@ OBJDoc.prototype.parse = function (gl, fileString, reverse) {
                 request.onreadystatechange = function () {
                     if (request.readyState == 4) {
                         if (request.status != 404) {
-                            onReadMTLFile(gl, request.responseText, mtl);
+                            onReadMTLFile(gl,program, request.responseText, mtl);
                         } else {
                             mtl.complete = true;
                         }
@@ -352,7 +352,7 @@ OBJDoc.prototype.parseFace = function (sp, materialName, vertices, reverse) {
 }
 
 // Analyze the material file
-function onReadMTLFile(gl, fileString, mtl) {
+function onReadMTLFile(gl,program, fileString, mtl) {
     var lines = fileString.split('\n');  // Break up into lines and store them as array
     lines.push(null);           // Append null
     var index = 0;              // Initialize index of line
@@ -401,7 +401,7 @@ function onReadMTLFile(gl, fileString, mtl) {
                 if (name === "") continue; // Go to the next line because of Error
                 path = sp.getWord();
                 if (material.ambientNr === 0) {
-                    material.ambientTexture = new Texture(gl, getDirectoryPath(mtl.fileName) + path, "ambient");
+                    material.ambientTexture = new Texture(gl,program, getDirectoryPath(mtl.fileName) + path, "ambient");
                     material.ambientNr = 1;
                 }
                 continue; // Go to the next line
@@ -409,7 +409,7 @@ function onReadMTLFile(gl, fileString, mtl) {
                 if (name === "") continue; // Go to the next line because of Error
                 path = sp.getWord();
                 if (material.diffuseNr === 0) {
-                    material.diffuseTexture = new Texture(gl, getDirectoryPath(mtl.fileName) + path, "diffuse");
+                    material.diffuseTexture = new Texture(gl,program, getDirectoryPath(mtl.fileName) + path, "diffuse");
                     material.diffuseNr = 1;
                 }
                 continue; // Go to the next line
@@ -417,7 +417,7 @@ function onReadMTLFile(gl, fileString, mtl) {
                 if (name === "") continue; // Go to the next line because of Error
                 path = sp.getWord();
                 if (material.specularNr === 0) {
-                    material.specularTexture = new Texture(gl, getDirectoryPath(mtl.fileName) + path, "specular");
+                    material.specularTexture = new Texture(gl,program, getDirectoryPath(mtl.fileName) + path, "specular");
                     material.specularNr = 1;
                 }
                 continue; // Go to the next line
@@ -425,7 +425,7 @@ function onReadMTLFile(gl, fileString, mtl) {
                 if (name === "") continue; // Go to the next line because of Error
                 path = sp.getWord();
                 if (material.heightNr === 0) {
-                    material.heightTexture = new Texture(gl, getDirectoryPath(mtl.fileName) + path, "height");
+                    material.heightTexture = new Texture(gl,program, getDirectoryPath(mtl.fileName) + path, "height");
                     material.heightNr = 1;
                 }
                 continue; // Go to the next line
@@ -607,7 +607,7 @@ Material.prototype.iscomplete = function () {
     return true;
 }
 var TextureNum = 1;
-var Texture = function (gl, path, type) {
+var Texture = function (gl,program, path, type) {
     console.log("load tex " + path)
     this.complete = false;
     this.id = TextureNum++;
@@ -616,8 +616,8 @@ var Texture = function (gl, path, type) {
         console.log("texture ", path, "loaded:");
         this.uniformName = "material." + type + "Tex";
         this.NrName = "material." + type + "Nr";
-        this.sampler = gl.getUniformLocation(gl.program, this.uniformName);
-        this.Nr = gl.getUniformLocation(gl.program, this.NrName);
+        this.sampler = gl.getUniformLocation(program, this.uniformName);
+        this.Nr = gl.getUniformLocation(program, this.NrName);
         this.texture = gl.createTexture();
 
         gl.activeTexture(gl.TEXTURE0 + this.id);

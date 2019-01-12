@@ -9,7 +9,7 @@ const float height = 480.0;
 
 out vec4 FragColor;
 
-const int SampleRate = 6;
+const int SampleRate = 15;
 
 struct Camera{
     vec3 Position;

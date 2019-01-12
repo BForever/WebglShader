@@ -1,4 +1,3 @@
-
 function DirLight() {
     this.ambient = new Vector3([1,1,1]);
     this.diffuse = new Vector3([1,1,1]);
