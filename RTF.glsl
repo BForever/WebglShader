@@ -21,7 +21,7 @@ struct Camera{
     float Far;
 };
 uniform Camera camera;
-
+uniform samplerCube skybox;
 // Structure
 struct Ray{
     vec3 origin;
@@ -112,19 +112,19 @@ void initData(vec4 FragCoord){
     materials[3].albedo = vec3(1.0);
 
     // Spheres
-    spheres[1].center = vec3(0,0,-1);
+    spheres[1].center = vec3(0,0,0);
     spheres[1].radius = 0.3;
     spheres[1].materialID = 2;
 
-    spheres[0].center = vec3(0,-1000.3,-1);
+    spheres[0].center = vec3(0,-1000.3,0);
     spheres[0].radius = 1000.0;
     spheres[0].materialID = 1;
 
-    spheres[2].center = vec3(-0.6,0,-1);
+    spheres[2].center = vec3(-0.6,0,0);
     spheres[2].radius = 0.3;
     spheres[2].materialID = 3;
 
-    spheres[3].center = vec3(0.6,0,-1);
+    spheres[3].center = vec3(0.6,0,0);
     spheres[3].radius = 0.3;
     spheres[3].materialID = 0;
 
@@ -227,8 +227,10 @@ vec3 getColor(Ray ray,float tmin,float tmax){
 }
 
 vec3 SkyColor(Ray ray){
-    float t = 0.5 * ray.direction.y + 1.0;
-    return(1.0 - t) * vec3(1) + t * vec3(0.5, 0.7, 1);
+//    float t = 0.5 * ray.direction.y + 1.0;
+//    return(1.0 - t) * vec3(1) + t * vec3(0.5, 0.7, 1);
+
+    return texture(skybox, ray.direction).xyz;
 }
 
 bool HitSphere(Sphere sphere, Ray ray,float tmin,float tmax,out HitRecord rec)

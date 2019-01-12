@@ -14,8 +14,11 @@ function updateElapsed() {
 //添加键盘监听事件
 document.addEventListener('keydown',onDocumentKeyDown,false);
 document.addEventListener('keyup',onDocumentKeyUp,false);
+document.addEventListener('mousewheel',onDocumentMouseWheel,false);
 var PRESSINGKEY = new Map();
-
+function onDocumentMouseWheel(event) {
+    camera.ProcessMouseScroll(event.deltaY/100)
+}
 function onDocumentKeyDown(event) {
     var code;
     if (event.key !== undefined) {
@@ -34,6 +37,8 @@ function onDocumentKeyUp(){
     }
     PRESSINGKEY.delete(code);
 }
+
+
 
 function ProcessInput(camera) {
     if(PRESSINGKEY.get(DIRECTION.FORWARD)!==undefined){
@@ -79,4 +84,6 @@ function initGL() {
     canvas = document.getElementById('canvas');
     gl = canvas.getContext('webgl2');
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
+
+
 }

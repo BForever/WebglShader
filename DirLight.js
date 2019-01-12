@@ -1,6 +1,6 @@
 
 function DirLight() {
-    this.ambient = new Vector3([0.2,0.2,0.2]);
+    this.ambient = new Vector3([1,1,1]);
     this.diffuse = new Vector3([1,1,1]);
     this.specular = new Vector3([1,1,1]);
     this.direction = new Vector3([0,0,-1]);

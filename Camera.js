@@ -1,5 +1,5 @@
 // Default camera values
-const YAW = -90.0;
+const YAW = 90.0;
 const PITCH = 0.0;
 const SPEED = 0.0025;
 const SENSITIVITY = 0.05;
@@ -16,10 +16,10 @@ const DIRECTION = {
 };
 
 function Camera() {
-    this.Position = new Vector3([0,0,2]);
-    this.Front = new Vector3([0,0,-1]);
+    this.Position = new Vector3([0,0,-10]);
+    this.Front = new Vector3([0,0,1]);
     this.Up = new Vector3([0,1,0]);
-    this.Right = new Vector3([1,0,0]);
+    this.Right = new Vector3([-1,0,0]);
     this.WorldUp = new Vector3([0,1,0]);
 
     // Euler Angles

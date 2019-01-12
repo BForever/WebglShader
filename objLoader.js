@@ -10,7 +10,13 @@ Model.prototype.draw = function (gl) {
 
     if (!this.loaded) return;
 
-    gl.clear(gl.COLOR_BUFFER_BIT, gl.DEPTH_BUFFER_BIT);
+    useProgram(gl,this.program);
+    gl.uniformMatrix4fv(this.program.uModel, false, this.modelMatrix.elements);
+    gl.uniformMatrix4fv(this.program.uView, false, viewMatrix.elements);
+    gl.uniformMatrix4fv(this.program.uProjection, false, projectionMatrix.elements);
+    gl.uniform3fv(gl.getUniformLocation(this.program,"viewPos"),camera.Position.elements);
+
+    gl.bindVertexArray(this.VAO);
     for (let i = 0; i < this.objDoc.nodes.length; i++) {
         let node = this.objDoc.nodes[i];
         node.material.apply(gl);
@@ -67,7 +73,7 @@ Model.prototype.onReadOBJFile = function (fileString, fileName, gl, reverse) {
 Model.prototype.onReadComplete = function (gl) {
     //从OBJ文件获取顶点坐标和颜色
     this.objDoc.Translate();
-
+    gl.bindVertexArray(this.VAO);
     //将数据写入缓冲区
 
     console.log("数据开始");
@@ -97,14 +103,28 @@ Model.prototype.onReadComplete = function (gl) {
     console.log(this.objDoc.nodes)
 };
 
-function Model(gl, program) {
+function Model(gl) {
+    this.program = loadShaders(gl,"vshader.glsl","fshader.glsl");
+    this.program.aPosition = gl.getAttribLocation(this.program, "aPosition");
+    this.program.aTexCoords = gl.getAttribLocation(this.program, "aTexCoords");
+    this.program.aNormal = gl.getAttribLocation(this.program, "aNormal");
+    this.program.uModel = gl.getUniformLocation(this.program, "uModel");
+    this.program.uView = gl.getUniformLocation(this.program, "uView");
+    this.program.uProjection = gl.getUniformLocation(this.program, "uProjection");
+    this.program.viewPos = gl.getUniformLocation(this.program, "viewPos");
+
+    this.VAO = gl.createVertexArray();
+
     this.loading = false;
     this.loaded = false;
     this.objDoc = null;
 
-    this.vertexBuffer = createEmptyArrayBuffer(gl, program.aPosition, 3, gl.FLOAT);
-    this.normalBuffer = createEmptyArrayBuffer(gl, program.aNormal, 3, gl.FLOAT);
-    this.texcordBuffer = createEmptyArrayBuffer(gl, program.aTexCoords, 2, gl.FLOAT);
+    this.modelMatrix = new Matrix4();
+
+    gl.bindVertexArray(this.VAO);
+    this.vertexBuffer = createEmptyArrayBuffer(gl, this.program.aPosition, 3, gl.FLOAT);
+    this.normalBuffer = createEmptyArrayBuffer(gl, this.program.aNormal, 3, gl.FLOAT);
+    this.texcordBuffer = createEmptyArrayBuffer(gl, this.program.aTexCoords, 2, gl.FLOAT);
 
     if (!this.vertexBuffer || !this.normalBuffer || !this.texcordBuffer) {
         console.log("无法创建缓冲区")
@@ -547,7 +567,6 @@ var Material = function (name) {
 }
 
 Material.prototype.apply = function (gl) {
-
     var location = gl.getUniformLocation(gl.program, "material.ambient");
     gl.uniform3fv(location, this.ambient.elements);
     location = gl.getUniformLocation(gl.program, "material.diffuse");

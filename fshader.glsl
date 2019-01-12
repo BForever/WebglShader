@@ -73,7 +73,6 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 
 void main()
 {
-
     // 属性
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
@@ -88,7 +87,7 @@ void main()
         result += CalcSpotLight(spotLights[i], norm, FragPos, viewDir);
 
     FragColor = vec4(result, 1.0);
-    FragColor = vec4(dirLight.diffuse, 1.0);
+//    FragColor = sqrt(vec4(dirLight.diffuse, 1.0));
 //    FragColor = vec4(texture(material.diffuse[0], TexCoords));
 }
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
