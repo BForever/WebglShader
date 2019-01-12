@@ -1,7 +1,5 @@
 initGL();
-var gl;
-var canvas;
-var camera = new Camera();
+camera = new Camera();
 
 // Keyboard
 var last = +new Date();
@@ -74,9 +72,7 @@ function ProcessInput(camera) {
 var setupChanged = true;
 
 var dirlight = new DirLight();
-
 document.getElementById("dirLight_ambient").onchange =  (event) => {
-    console.log(event)
     dirlight.ambient = hexToRgba(event.target.value);
     setupChanged = true;
 };
@@ -89,15 +85,87 @@ document.getElementById("dirLight_specular").onchange =  (event) => {
     setupChanged = true;
 };
 document.getElementById("dirLight_direction_x").onchange =  (event) => {
-    dirlight.direction.elements[0] = event.target.value;
+    dirlight.direction.elements[0] = parseFloat(event.target.value);
     setupChanged = true;
 };
 document.getElementById("dirLight_direction_y").onchange =  (event) => {
-    dirlight.direction.elements[1] = event.target.value;
+    dirlight.direction.elements[1] = parseFloat(event.target.value);
     setupChanged = true;
 };
 document.getElementById("dirLight_direction_z").onchange =  (event) => {
-    dirlight.direction.elements[2] = event.target.value;
+    dirlight.direction.elements[2] = parseFloat(event.target.value);
+    setupChanged = true;
+};
+
+let pointLight = new PointLight();
+document.getElementById("pointLight_ambient").onchange =  (event) => {
+    pointLight.ambient = hexToRgba(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("pointLight_diffuse").onchange =  (event) => {
+    pointLight.diffuse = hexToRgba(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("pointLight_specular").onchange =  (event) => {
+    pointLight.specular = hexToRgba(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("pointLight_position_x").onchange =  (event) => {
+    pointLight.position.elements[0] = (event.target.value);
+    setupChanged = true;
+};
+document.getElementById("pointLight_position_y").onchange =  (event) => {
+    pointLight.position.elements[1] = (event.target.value);
+    setupChanged = true;
+};
+document.getElementById("pointLight_position_z").onchange =  (event) => {
+    pointLight.position.elements[2] = (event.target.value);
+    setupChanged = true;
+};
+document.getElementById("pointLight_constant").onchange =  (event) => {
+    pointLight.constant = parseFloat(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("pointLight_linear").onchange =  (event) => {
+    pointLight.linear =parseFloat(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("pointLight_quadratic").onchange =  (event) => {
+    pointLight.quadratic = parseFloat(event.target.value);
+    setupChanged = true;
+};
+
+let spotLight = new SpotLight();
+document.getElementById("spotLight_ambient").onchange =  (event) => {
+    spotLight.ambient = hexToRgba(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("spotLight_diffuse").onchange =  (event) => {
+    spotLight.diffuse = hexToRgba(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("spotLight_specular").onchange =  (event) => {
+    spotLight.specular = hexToRgba(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("spotLight_constant").onchange =  (event) => {
+    spotLight.constant = parseFloat(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("spotLight_linear").onchange =  (event) => {
+    spotLight.linear =parseFloat(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("spotLight_quadratic").onchange =  (event) => {
+    spotLight.quadratic = parseFloat(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("spotLight_innerCutoff").onchange =  (event) => {
+    spotLight.innerCutoff =parseFloat(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("spotLight_outerCutoff").onchange =  (event) => {
+    spotLight.outerCutoff = parseFloat(event.target.value);
     setupChanged = true;
 };
 

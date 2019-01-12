@@ -49,7 +49,19 @@ function main() {
             dirlight.use(gl, model.program);
             dirlight.use(gl, texturemodel.program);
 
+            // pointLight
+            for (let obj of objlist) {
+                pointLight.use(gl, obj.program);
+            }
+            pointLight.use(gl, model.program);
+            pointLight.use(gl, texturemodel.program);
 
+            // spotLight
+            for (let obj of objlist) {
+                spotLight.use(gl, obj.program);
+            }
+            spotLight.use(gl, model.program);
+            spotLight.use(gl, texturemodel.program);
         }
 
         gl.clearColor(0.2, 0.2, 0.2, 1.0);
@@ -77,6 +89,5 @@ function main() {
 
 
 
-var projectionMatrix;
-var viewMatrix;
+
 main();

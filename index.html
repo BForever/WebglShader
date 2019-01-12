@@ -53,9 +53,9 @@
         constant:
         <input id="pointLight_constant" type="number" value="1"/>
         linear:
-        <input id="pointLight_linear" type="range" min="0.01" max = "1" step="0.05" value="0.09"/>
+        <input id="pointLight_linear" type="range" min="0.01" max = "1" step="0.01" value="0.09"/>
         quadratic:
-        <input id="pointLight_quadratic" type="range" min="0.00001" max = "2" step="0.02" value="0.032"/>
+        <input id="pointLight_quadratic" type="range" min="0.00001" max = "0.1" step="0.001" value="0.032"/>
         <br>
 
         <div>
@@ -66,15 +66,39 @@
         </div>
     </div>
 
+    spotLight:
+    <div>
+        ambient:
+        <input id="spotLight_ambient" type="color" value="#000000" />
+        diffuse:
+        <input id="spotLight_diffuse" type="color" value="#000000"/>
+        specular:
+        <input id="spotLight_specular" type="color" value="#000000"/>
+        constant:
+        <input id="spotLight_constant" type="number" value="1"/>
+        linear:
+        <input id="spotLight_linear" type="range" min="0.01" max = "1" step="0.01" value="0.09"/>
+        quadratic:
+        <input id="spotLight_quadratic" type="range" min="0.00001" max = "0.1" step="0.001" value="0.032"/>
+        innerCutoff:
+        <input id="spotLight_innerCutoff" type="range" min="1" max = "100" step="1" value="45"/>
+        outerCutoff:
+        <input id="spotLight_outerCutoff" type="range" min="1" max = "100" step="1" value="60"/>
+    </div>
+
 
     <script src="lib/webgl-utils.js"></script>
     <script src="lib/webgl-debug.js"></script>
     <script src="lib/cuon-utils.js"></script>
     <script src="lib/cuon-matrix.js"></script>
 
+    <script src="Setup.js"></script>
+    <script src="Camera.js"></script>
     <script src="Skybox.js"></script>
     <script src="DirLight.js"></script>
-    <script src="Camera.js"></script>
+    <script src="PointLight.js"></script>
+    <script src="SpotLight.js"></script>
+
     <!--<script src="RBC.js"></script>-->
     <script src="objLoader.js"></script>
     <script src="Shapes.js"></script>
