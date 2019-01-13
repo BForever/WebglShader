@@ -244,7 +244,7 @@ document.getElementById("angle").onchange =  (event) => {
 
 document.getElementById("scale_x").onchange =  (event) => {
     if(editable.scale==null) {
-        editable.scale = [parseFloat(event.target.value),0,0];
+        editable.scale = [parseFloat(event.target.value),1,1];
     }else {
         editable.scale[0] = parseFloat(event.target.value);
     }
@@ -252,7 +252,7 @@ document.getElementById("scale_x").onchange =  (event) => {
 };
 document.getElementById("scale_y").onchange =  (event) => {
     if(editable.scale==null) {
-        editable.scale = [0,parseFloat(event.target.value),0];
+        editable.scale = [1,parseFloat(event.target.value),1];
     }else {
         editable.scale[1] = parseFloat(event.target.value);
     }
@@ -260,13 +260,45 @@ document.getElementById("scale_y").onchange =  (event) => {
 };
 document.getElementById("scale_z").onchange =  (event) => {
     if(editable.scale==null) {
-        editable.scale = [0,0,parseFloat(event.target.value)];
+        editable.scale = [1,1,parseFloat(event.target.value)];
     }else {
         editable.scale[2] = parseFloat(event.target.value);
     }
     setupChanged = true;
 };
 
+document.getElementById("sampleRate").onchange =  (event) => {
+    rtBox.sampleRate = Math.abs(parseInt(event.target.value));
+    setupChanged = true;
+};
+document.getElementById("maxDepth").onchange =  (event) => {
+    rtBox.maxDepth = Math.abs(parseInt(event.target.value));
+    setupChanged = true;
+};
+document.getElementById("refract").onchange =  (event) => {
+    rtBox.refract = event.target.checked? 1:0;
+    setupChanged = true;
+};
+document.getElementById("reflect").onchange =  (event) => {
+    rtBox.reflect = event.target.checked? 1:0;
+    setupChanged = true;
+};
+document.getElementById("diffuse").onchange =  (event) => {
+    rtBox.diffuse = event.target.checked? 1:0;
+    setupChanged = true;
+};
+document.getElementById("albedo").onchange =  (event) => {
+    rtBox.albedo = hexToRgba(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("fuzz").onchange =  (event) => {
+    rtBox.fuzz = parseFloat(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("refidx").onchange =  (event) => {
+    rtBox.refidx = parseFloat(event.target.value);
+    setupChanged = true;
+};
 var hexToRgba = function (hex) {
     let hexColor = /^#/.test(hex) ? hex.slice(1) : hex, r, g, b;
     hexColor = /^[0-9a-f]{3}|[0-9a-f]{6}$/i.test(hexColor) ? hexColor : 'fffff';

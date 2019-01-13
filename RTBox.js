@@ -20,6 +20,24 @@ function RTBox(gl) {
     this.program.cameraNear = gl.getUniformLocation(this.program, "camera.Near");
     this.program.cameraFar = gl.getUniformLocation(this.program, "camera.Far");
 
+    this.program.sampleRate = gl.getUniformLocation(this.program, "SampleRate");
+    this.program.maxDepth = gl.getUniformLocation(this.program, "MaxDepth");
+    this.program.refract = gl.getUniformLocation(this.program, "editMaterial.refract");
+    this.program.reflect = gl.getUniformLocation(this.program, "editMaterial.reflect");
+    this.program.diffuse = gl.getUniformLocation(this.program, "editMaterial.diffuse");
+    this.program.albedo = gl.getUniformLocation(this.program, "editMaterial.albedo");
+    this.program.fuzz = gl.getUniformLocation(this.program, "editMaterial.fuzz");
+    this.program.refidx = gl.getUniformLocation(this.program, "editMaterial.refidx");
+
+    this.sampleRate = 10;
+    this.maxDepth = 20;
+    this.refract = 0;
+    this.reflect = 0;
+    this.diffuse = 0;
+    this.albedo = new Vector3([0,0,0]);
+    this.fuzz = 0.1;
+    this.refidx = 1.5;
+
     this.modelMatrix = new Matrix4();
     this.translate=null;
     this.rotate=null;
@@ -44,6 +62,16 @@ RTBox.prototype.draw=function (gl) {
     gl.uniform3fv(this.program.cameraRight,camera.Right.elements);
     gl.uniform3fv(this.program.cameraUp,camera.Up.elements);
     gl.uniform1f(this.program.cameraZoom,camera.Zoom);
+    gl.uniform1f(this.program.randomSeed,new Date().getMilliseconds());
+
+    gl.uniform1i(this.program.sampleRate,this.sampleRate);
+    gl.uniform1i(this.program.maxDepth,this.maxDepth);
+    gl.uniform1i(this.program.refract,this.refract);
+    gl.uniform1i(this.program.reflect,this.reflect);
+    gl.uniform1i(this.program.diffuse,this.diffuse);
+    gl.uniform3fv(this.program.albedo,this.albedo.elements);
+    gl.uniform1f(this.program.fuzz,this.fuzz);
+    gl.uniform1f(this.program.refidx,this.refidx);
 
     this.modelMatrix.setIdentity();
     if(this.translate!=null) this.modelMatrix.translate(this.translate[0],this.translate[1],this.translate[2]);

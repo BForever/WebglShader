@@ -4,7 +4,7 @@ function main() {
     let skybox = new SkyBox(gl, "resources/hw_alps/alps");
 
     // RayTracing Box
-    let rtBox =new RTBox(gl, skybox.texture);
+    rtBox =new RTBox(gl, skybox.texture);
     rtBox.translate=[0, 0, -20];
     rtBox.scale=[5, 5, 5];
 
@@ -15,11 +15,11 @@ function main() {
     model.rotate=[180, 0, 1, 0];
     model.scale=[0.1, 0.1, 0.1];
 
-    let table = new Model(gl);
-    table.readOBJFile("resources/table/file.obj", gl, true);
-    table.translate=[0, -15, 0];
-    // table.rotate=[180, 0, 1, 0];
-    table.scale=[0.1, 0.1, 0.1];
+    // let table = new Model(gl);
+    // table.readOBJFile("resources/table/file.obj", gl, true);
+    // table.translate=[0, -15, 0];
+    // // table.rotate=[180, 0, 1, 0];
+    // table.scale=[0.1, 0.1, 0.1];
 
     // Model with texture
     let texturemodel = new Model(gl);
@@ -32,7 +32,7 @@ function main() {
 
     // Basic shapes
     let o3 = new Sphere(gl, 48, 24, new Vector3([0.0215, 0.1745, 0.0215]), new Vector3([0.07568, 0.61424, 0.07568]), new Vector3([0.633, 0.727811, 0.633]), 0.6,TYPES.reflect);
-    let o2 = new Cube(gl, new Vector3([0.329412, 0.223529, 0.027451]), new Vector3([0.780392, 0.568627, 0.113725]), new Vector3([0.992157, 0.941176, 0.807843]), 0.21794872);
+    let o2 = new Cube(gl, new Vector3([0.19225,	0.19225,	0.19225]), new Vector3([0.50754,	0.50754	,0.50754]), new Vector3([0.508273,	0.508273	,0.508273]), 0.4);
     let o1 = new Cylinder(gl, 20, new Vector3([0.24725, 0.1995, 0.0745]), new Vector3([0.75164, 0.60648, 0.22648]), new Vector3([0.628281, 0.555802, 0.366065]), 0.4)
     let o6 = new Cone(gl, 70, new Vector3([0.0, 0.1, 0.06]), new Vector3([0.0, 0.50980392, 0.50980392]), new Vector3([0.50196078, 0.50196078, 0.50196078]), 0.25);
     let o5 = new Prism(gl, 7, new Vector3([0.1745	,0.01175,	0.01175]), new Vector3([0.61424,	0.04136	,0.04136]), new Vector3([0.727811	,0.626959	,0.626959]), 0.6);

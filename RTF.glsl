@@ -9,7 +9,8 @@ const float height = 480.0;
 
 out vec4 FragColor;
 
-const int SampleRate = 15;
+uniform int SampleRate;
+uniform int MaxDepth;
 
 struct Camera{
     vec3 Position;
@@ -45,8 +46,9 @@ struct Material{
     float fuzz;
     float refidx;
 };
-
-Material materials[4];
+#define Num_materials 4
+Material materials[Num_materials];
+uniform Material editMaterial;
 
 struct Sphere{
     vec3 center;
@@ -55,7 +57,7 @@ struct Sphere{
 };
 
 // Data
-#define Num_spheres 4
+#define Num_spheres 5
 Sphere spheres[Num_spheres];
 
 
@@ -128,8 +130,9 @@ void initData(vec4 FragCoord){
     spheres[3].radius = 1.0;
     spheres[3].materialID = 0;
 
-
-
+    spheres[4].center = vec3(0,0,-18);
+    spheres[4].radius = 1.0;
+    spheres[4].materialID = 4;
 }
 void main() {
     initData(gl_FragCoord);
@@ -150,7 +153,7 @@ vec3 getColor(Ray ray,float tmin,float tmax){
     bool hit=true;
     Ray tempRay = ray;
     vec3 colorFactor=vec3(1);
-    int depth=30;
+    int depth=MaxDepth;
 
     // Trace loop
     while(hit&&depth>0){
@@ -171,7 +174,12 @@ vec3 getColor(Ray ray,float tmin,float tmax){
 
         if(hit){
             // Material
-            Material mt = materials[record.materialID];
+            Material mt;
+            if(record.materialID>=Num_materials){
+                mt = editMaterial;
+            }else{
+                mt = materials[record.materialID];
+            }
             vec3 outnormal;
             vec3 reflected = reflect(tempRay.direction,record.normal);
             if(mt.refract){
