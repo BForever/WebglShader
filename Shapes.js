@@ -41,9 +41,31 @@ const skyBoxCube = [
     -1.0, -1.0, 1.0,
     1.0, -1.0, 1.0
 ];
+const TYPES={
+    normal:0,
+    reflect:1,
+    refract:2,
+}
 
-function Shape(gl, ambient, diffuse, specular, shininess) {
-    this.program = loadShaders(gl, "vshader.glsl", "fshader.glsl");
+
+function Shape(gl, ambient, diffuse, specular, shininess,type=0) {
+    switch (type) {
+        case TYPES.normal:{
+            this.program = loadShaders(gl, "vshader.glsl", "fshader.glsl");
+            break;
+        }
+        case TYPES.reflect:{
+            this.program = loadShaders(gl, "vshader.glsl", "reflect.glsl");
+            break;
+        }
+        case TYPES.refract:{
+            this.program = loadShaders(gl, "vshader.glsl", "refract.glsl");
+            break;
+        }
+        default:{
+        }
+
+    }
     this.program.aPosition = gl.getAttribLocation(this.program, "aPosition");
     this.program.aTexCoords = gl.getAttribLocation(this.program, "aTexCoords");
     this.program.aNormal = gl.getAttribLocation(this.program, "aNormal");
@@ -55,19 +77,31 @@ function Shape(gl, ambient, diffuse, specular, shininess) {
     this.VAO = gl.createVertexArray();
 
     // Material
-    gl.useProgram(this.program);
-    let location = gl.getUniformLocation(this.program, "material.ambient");
-    gl.uniform3fv(location, ambient.elements);
-    location = gl.getUniformLocation(this.program, "material.diffuse");
-    gl.uniform3fv(location, diffuse.elements);
-    location = gl.getUniformLocation(this.program, "material.specular");
-    gl.uniform3fv(location, specular.elements);
-    location = gl.getUniformLocation(this.program, "material.shininess");
-    gl.uniform1f(location, shininess);
+    this.ambient = ambient;
+    this.diffuse = diffuse;
+    this.specular = specular;
+    this.shininess = shininess;
+
+    this.applyMaterial(gl);
 
     this.num = 0;
     this.modelMatrix = new Matrix4();
+    this.translate=null;
+    this.rotate=null;
+    this.scale=null;
 }
+
+Shape.prototype.applyMaterial=function(gl){
+    gl.useProgram(this.program);
+    let location = gl.getUniformLocation(this.program, "material.ambient");
+    gl.uniform3fv(location, this.ambient.elements);
+    location = gl.getUniformLocation(this.program, "material.diffuse");
+    gl.uniform3fv(location, this.diffuse.elements);
+    location = gl.getUniformLocation(this.program, "material.specular");
+    gl.uniform3fv(location, this.specular.elements);
+    location = gl.getUniformLocation(this.program, "material.shininess");
+    gl.uniform1f(location, this.shininess);
+};
 
 Shape.prototype.bufferData = function (gl, position, normal, texcords) {
     gl.bindVertexArray(this.VAO);
@@ -83,6 +117,10 @@ Shape.prototype.bufferData = function (gl, position, normal, texcords) {
 };
 
 Shape.prototype.draw = function (gl) {
+    this.modelMatrix.setIdentity();
+    if(this.translate!=null) this.modelMatrix.translate(this.translate[0],this.translate[1],this.translate[2]);
+    if(this.rotate!=null)this.modelMatrix.rotate(this.rotate[0],this.rotate[1],this.rotate[2],this.rotate[3]);
+    if(this.scale!=null)this.modelMatrix.scale(this.scale[0],this.scale[1],this.scale[2]);
     // Normal scene
     useProgram(gl, this.program);
     gl.uniformMatrix4fv(this.program.uModel, false, this.modelMatrix.elements);
@@ -90,12 +128,13 @@ Shape.prototype.draw = function (gl) {
     gl.uniformMatrix4fv(this.program.uProjection, false, projectionMatrix.elements);
     gl.uniform3fv(this.program.viewPos, camera.Position.elements);
 
+
     gl.bindVertexArray(this.VAO);
     gl.drawArrays(gl.TRIANGLES, 0, this.num);
 };
 
-function Cube(gl, ambient, diffuse, specular, shininess) {
-    Shape.call(this, gl, ambient, diffuse, specular, shininess);
+function Cube(gl, ambient, diffuse, specular, shininess,type=0) {
+    Shape.call(this, gl, ambient, diffuse, specular, shininess,type);
     this.num = 36;
     this.position = [
         -1, 1, -1,
@@ -190,8 +229,8 @@ function Cube(gl, ambient, diffuse, specular, shininess) {
 Cube.prototype = Object.create(Shape.prototype);
 Cube.prototype.constructor = Cube;
 
-function Sphere(gl, xlevel, ylevel, ambient, diffuse, specular, shininess) {
-    Shape.call(this, gl, ambient, diffuse, specular, shininess);
+function Sphere(gl, xlevel, ylevel, ambient, diffuse, specular, shininess,type=0) {
+    Shape.call(this, gl, ambient, diffuse, specular, shininess,type);
     this.position = [];
     this.normal = [];
     this.texcords = [];
@@ -267,8 +306,8 @@ function Sphere(gl, xlevel, ylevel, ambient, diffuse, specular, shininess) {
 Sphere.prototype = Object.create(Shape.prototype);
 Sphere.prototype.constructor = Sphere;
 
-function Cylinder(gl, level, ambient, diffuse, specular, shininess) {
-    Shape.call(this, gl, ambient, diffuse, specular, shininess);
+function Cylinder(gl, level, ambient, diffuse, specular, shininess,type=0) {
+    Shape.call(this, gl, ambient, diffuse, specular, shininess,type);
     this.position = [];
     this.normal = [];
     this.texcords = [];
@@ -365,8 +404,8 @@ function Cylinder(gl, level, ambient, diffuse, specular, shininess) {
 Cylinder.prototype = Object.create(Shape.prototype);
 Cylinder.prototype.constructor = Cylinder;
 
-function Cone(gl, level, ambient, diffuse, specular, shininess) {
-    Shape.call(this, gl, ambient, diffuse, specular, shininess);
+function Cone(gl, level, ambient, diffuse, specular, shininess,type=0) {
+    Shape.call(this, gl, ambient, diffuse, specular, shininess,type);
     this.position = [];
     this.normal = [];
     this.texcords = [];
@@ -427,8 +466,8 @@ function Cone(gl, level, ambient, diffuse, specular, shininess) {
 Cone.prototype = Object.create(Shape.prototype);
 Cone.prototype.constructor = Cone;
 
-function Prism(gl, level, ambient, diffuse, specular, shininess) {
-    Shape.call(this, gl, ambient, diffuse, specular, shininess);
+function Prism(gl, level, ambient, diffuse, specular, shininess,type=0) {
+    Shape.call(this, gl, ambient, diffuse, specular, shininess,type);
     this.position = [];
     this.normal = [];
     this.texcords = [];
@@ -530,8 +569,8 @@ function Prism(gl, level, ambient, diffuse, specular, shininess) {
 Prism.prototype = Object.create(Shape.prototype);
 Prism.prototype.constructor = Prism;
 
-function Frustum(gl, scale,level, ambient, diffuse, specular, shininess) {
-    Shape.call(this, gl, ambient, diffuse, specular, shininess);
+function Frustum(gl, scale,level, ambient, diffuse, specular, shininess,type=0) {
+    Shape.call(this, gl, ambient, diffuse, specular, shininess,type);
     this.position = [];
     this.normal = [];
     this.texcords = [];

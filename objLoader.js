@@ -10,6 +10,11 @@ Model.prototype.draw = function (gl) {
 
     if (!this.loaded) return;
 
+    this.modelMatrix.setIdentity();
+    if(this.translate!=null) this.modelMatrix.translate(this.translate[0],this.translate[1],this.translate[2]);
+    if(this.rotate!=null)this.modelMatrix.rotate(this.rotate[0],this.rotate[1],this.rotate[2],this.rotate[3]);
+    if(this.scale!=null)this.modelMatrix.scale(this.scale[0],this.scale[1],this.scale[2]);
+
     useProgram(gl,this.program);
     gl.uniformMatrix4fv(this.program.uModel, false, this.modelMatrix.elements);
     gl.uniformMatrix4fv(this.program.uView, false, viewMatrix.elements);
@@ -131,6 +136,11 @@ function Model(gl) {
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    this.translate=null;
+    this.rotate=null;
+    this.scale=null;
+
 }
 
 

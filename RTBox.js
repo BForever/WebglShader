@@ -21,6 +21,9 @@ function RTBox(gl) {
     this.program.cameraFar = gl.getUniformLocation(this.program, "camera.Far");
 
     this.modelMatrix = new Matrix4();
+    this.translate=null;
+    this.rotate=null;
+    this.scale=null;
 
     gl.uniform1f(this.program.cameraNear,1);
     gl.uniform1f(this.program.cameraFar,2000);
@@ -41,6 +44,11 @@ RTBox.prototype.draw=function (gl) {
     gl.uniform3fv(this.program.cameraRight,camera.Right.elements);
     gl.uniform3fv(this.program.cameraUp,camera.Up.elements);
     gl.uniform1f(this.program.cameraZoom,camera.Zoom);
+
+    this.modelMatrix.setIdentity();
+    if(this.translate!=null) this.modelMatrix.translate(this.translate[0],this.translate[1],this.translate[2]);
+    if(this.rotate!=null)this.modelMatrix.rotate(this.rotate[0],this.rotate[1],this.rotate[2],this.rotate[3]);
+    if(this.scale!=null)this.modelMatrix.scale(this.scale[0],this.scale[1],this.scale[2]);
 
     gl.uniformMatrix4fv(this.program.uModel, false, this.modelMatrix.elements);
     gl.uniformMatrix4fv(this.program.uView, false, viewMatrix.elements);

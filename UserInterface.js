@@ -168,7 +168,104 @@ document.getElementById("spotLight_outerCutoff").onchange =  (event) => {
     spotLight.outerCutoff = parseFloat(event.target.value);
     setupChanged = true;
 };
+// Material
+document.getElementById("material_ambient").onchange =  (event) => {
+    editable.ambient = hexToRgba(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("material_diffuse").onchange =  (event) => {
+    editable.diffuse = hexToRgba(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("material_specular").onchange =  (event) => {
+    editable.specular = hexToRgba(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("material_shininess").onchange =  (event) => {
+    editable.shininess = parseFloat(event.target.value);
+    setupChanged = true;
+};
+document.getElementById("translate_x").onchange =  (event) => {
+    if(editable.translate==null) {
+        editable.translate = [parseFloat(event.target.value),0,0];
+    }else {
+        editable.translate[0] = parseFloat(event.target.value);
+    }
+    setupChanged = true;
+};
+document.getElementById("translate_y").onchange =  (event) => {
+    if(editable.translate==null) {
+        editable.translate = [0,parseFloat(event.target.value),0];
+    }else {
+        editable.translate[1] = parseFloat(event.target.value);
+    }
+    setupChanged = true;
+};
+document.getElementById("translate_z").onchange =  (event) => {
+    if(editable.translate==null) {
+        editable.translate = [0,0,parseFloat(event.target.value)];
+    }else {
+        editable.translate[2] = parseFloat(event.target.value);
+    }
+    setupChanged = true;
+};
+document.getElementById("rotate_x").onchange =  (event) => {
+    if(editable.rotate==null) {
+        editable.rotate = [0,parseFloat(event.target.value),0,0];
+    }else {
+        editable.rotate[1] = parseFloat(event.target.value);
+    }
+    setupChanged = true;
+};
+document.getElementById("rotate_y").onchange =  (event) => {
+    if(editable.rotate==null) {
+        editable.rotate = [0,0,parseFloat(event.target.value),0];
+    }else {
+        editable.rotate[2] = parseFloat(event.target.value);
+    }
+    setupChanged = true;
+};
+document.getElementById("rotate_z").onchange =  (event) => {
+    if(editable.rotate==null) {
+        editable.rotate = [0,0,0,parseFloat(event.target.value)];
+    }else {
+        editable.rotate[3] = parseFloat(event.target.value);
+    }
+    setupChanged = true;
+};
+document.getElementById("angle").onchange =  (event) => {
+    if(editable.rotate==null) {
+        editable.rotate = [parseFloat(event.target.value),0,0,0];
+    }else {
+        editable.rotate[0] = parseFloat(event.target.value);
+    }
+    setupChanged = true;
+};
 
+document.getElementById("scale_x").onchange =  (event) => {
+    if(editable.scale==null) {
+        editable.scale = [parseFloat(event.target.value),0,0];
+    }else {
+        editable.scale[0] = parseFloat(event.target.value);
+    }
+    setupChanged = true;
+};
+document.getElementById("scale_y").onchange =  (event) => {
+    if(editable.scale==null) {
+        editable.scale = [0,parseFloat(event.target.value),0];
+    }else {
+        editable.scale[1] = parseFloat(event.target.value);
+    }
+    setupChanged = true;
+};
+document.getElementById("scale_z").onchange =  (event) => {
+    if(editable.scale==null) {
+        editable.scale = [0,0,parseFloat(event.target.value)];
+    }else {
+        editable.scale[2] = parseFloat(event.target.value);
+    }
+    setupChanged = true;
+};
 
 var hexToRgba = function (hex) {
     let hexColor = /^#/.test(hex) ? hex.slice(1) : hex, r, g, b;

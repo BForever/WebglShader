@@ -2,7 +2,7 @@ function DirLight() {
     this.ambient = new Vector3([1,1,1]);
     this.diffuse = new Vector3([1,1,1]);
     this.specular = new Vector3([1,1,1]);
-    this.direction = new Vector3([0,0,-1]);
+    this.direction = new Vector3([1,-1,1]);
 }
 
 DirLight.prototype.use = function (gl,program) {

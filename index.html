@@ -7,7 +7,8 @@
         html, body {
             padding: 0;
             margin: 0;
-            text-align:center
+            /*text-align:center;*/
+            background-color: gray;
         }
         /*#canvas {*/
             /*margin: 10px;*/
@@ -15,76 +16,114 @@
         /*}*/
         div {
             margin: 10px;
-            border: 1px solid black;
+            border: 1px solid green;
         }
+
     </style>
 
 </head>
 <body>
-    <div style="margin:0 auto">
+    <div style="float: left;">
         <canvas id="canvas" width="640" height="480"></canvas>
     </div>
-    dirLight:
-    <div>
-        ambient:
-        <input id="dirLight_ambient" type="color" value="#FFFFFF" />
-        diffuse:
-        <input id="dirLight_diffuse" type="color" value="#FFFFFF"/>
-        specular:
-        <input id="dirLight_specular" type="color" value="#FFFFFF"/>
-        <br>
-
+    <div style=" background-color: deepskyblue; margin-left: 660px;">
+        dirLight:
         <div>
-            direction:<br>
-            x:<input id="dirLight_direction_x" type="number" value="1"/><br>
-            y:<input id="dirLight_direction_y" type="number" value="-1"/><br>
-            z:<input id="dirLight_direction_z" type="number" value="1"/><br>
+            ambient:
+            <input id="dirLight_ambient" type="color" value="#FFFFFF" />
+            diffuse:
+            <input id="dirLight_diffuse" type="color" value="#FFFFFF"/>
+            specular:
+            <input id="dirLight_specular" type="color" value="#FFFFFF"/>
+
+
+            <div>
+                direction:<br>
+                x:<input id="dirLight_direction_x" type="number" value="1"/><br>
+                y:<input id="dirLight_direction_y" type="number" value="-1"/><br>
+                z:<input id="dirLight_direction_z" type="number" value="1"/><br>
+            </div>
+        </div>
+
+        pointLight:
+        <div>
+            ambient:
+            <input id="pointLight_ambient" type="color" value="#000000" />
+            diffuse:
+            <input id="pointLight_diffuse" type="color" value="#000000"/>
+            specular:
+            <input id="pointLight_specular" type="color" value="#000000"/>
+            constant:
+            <input id="pointLight_constant" type="number" value="1"/>
+            linear:
+            <input id="pointLight_linear" type="range" min="0.01" max = "1" step="0.01" value="0.09"/>
+            quadratic:
+            <input id="pointLight_quadratic" type="range" min="0.00001" max = "0.1" step="0.001" value="0.032"/>
+            <br>
+
+            <div>
+                position:<br>
+                x:<input id="pointLight_position_x" type="number" value="20"/><br>
+                y:<input id="pointLight_position_y" type="number" value="-20"/><br>
+                z:<input id="pointLight_position_z" type="number" value="20"/><br>
+            </div>
+        </div>
+
+        spotLight:
+        <div>
+            ambient:
+            <input id="spotLight_ambient" type="color" value="#000000" />
+            diffuse:
+            <input id="spotLight_diffuse" type="color" value="#000000"/>
+            specular:
+            <input id="spotLight_specular" type="color" value="#000000"/>
+            constant:
+            <input id="spotLight_constant" type="number" value="1"/>
+            linear:
+            <input id="spotLight_linear" type="range" min="0.01" max = "1" step="0.01" value="0.09"/>
+            quadratic:
+            <input id="spotLight_quadratic" type="range" min="0.00001" max = "0.1" step="0.001" value="0.032"/>
+            innerCutoff:
+            <input id="spotLight_innerCutoff" type="range" min="1" max = "50" step="1" value="10"/>
+            outerCutoff:
+            <input id="spotLight_outerCutoff" type="range" min="1" max = "50" step="1" value="15"/>
+        </div>
+
+        editable:
+        <div style="text-align: left">
+            ambient:
+            <input id="material_ambient" type="color" value="#000000" />
+            diffuse:
+            <input id="material_diffuse" type="color" value="#000000"/>
+            specular:
+            <input id="material_specular" type="color" value="#000000"/>
+            shininess:
+            <input id="material_shininess" type="range" min="0.1" max = "50" step="0.1" value="32"/>
+
+            <div style="float: left">
+                translate:<br>
+                x:<input id="translate_x" type="range" min="-10" max = "10" step="0.1" value="0"/><br>
+                y:<input id="translate_y" type="range" min="-10" max = "10" step="0.1" value="0"/><br>
+                z:<input id="translate_z" type="range" min="-10" max = "10" step="0.1" value="0"/><br>
+            </div>
+
+            <div style="float: left">
+                rotate:<br>
+                angle:<input id="angle" type="range" min="-180" max="180" step="1" value="0"/><br>
+                x:<input id="rotate_x" type="number" value="0"/><br>
+                y:<input id="rotate_y" type="number" value="0"/><br>
+                z:<input id="rotate_z" type="number" value="0"/><br>
+            </div>
+
+            <div style="height:113px;" >
+                scale:<br>
+                x:<input id="scale_x" type="range" min="0.1" max = "5" step="0.1" value="1"/><br>
+                y:<input id="scale_y" type="range" min="0.1" max = "5" step="0.1" value="1"/><br>
+                z:<input id="scale_z" type="range" min="0.1" max = "5" step="0.1" value="1"/><br>
+            </div>
         </div>
     </div>
 
-    pointLight:
-    <div>
-        ambient:
-        <input id="pointLight_ambient" type="color" value="#000000" />
-        diffuse:
-        <input id="pointLight_diffuse" type="color" value="#000000"/>
-        specular:
-        <input id="pointLight_specular" type="color" value="#000000"/>
-        constant:
-        <input id="pointLight_constant" type="number" value="1"/>
-        linear:
-        <input id="pointLight_linear" type="range" min="0.01" max = "1" step="0.01" value="0.09"/>
-        quadratic:
-        <input id="pointLight_quadratic" type="range" min="0.00001" max = "0.1" step="0.001" value="0.032"/>
-        <br>
-
-        <div>
-            position:<br>
-            x:<input id="pointLight_position_x" type="number" value="20"/><br>
-            y:<input id="pointLight_position_y" type="number" value="-20"/><br>
-            z:<input id="pointLight_position_z" type="number" value="20"/><br>
-        </div>
-    </div>
-
-    spotLight:
-    <div>
-        ambient:
-        <input id="spotLight_ambient" type="color" value="#000000" />
-        diffuse:
-        <input id="spotLight_diffuse" type="color" value="#000000"/>
-        specular:
-        <input id="spotLight_specular" type="color" value="#000000"/>
-        constant:
-        <input id="spotLight_constant" type="number" value="1"/>
-        linear:
-        <input id="spotLight_linear" type="range" min="0.01" max = "1" step="0.01" value="0.09"/>
-        quadratic:
-        <input id="spotLight_quadratic" type="range" min="0.00001" max = "0.1" step="0.001" value="0.032"/>
-        innerCutoff:
-        <input id="spotLight_innerCutoff" type="range" min="1" max = "100" step="1" value="45"/>
-        outerCutoff:
-        <input id="spotLight_outerCutoff" type="range" min="1" max = "100" step="1" value="60"/>
-    </div>
 
 
     <script src="lib/webgl-utils.js"></script>
